@@ -1,0 +1,63 @@
+if BOARD_ESL
+
+# No DCDC support components: if we enable this, the chip
+# will brick itself upon reboot.
+config BOARD_ENABLE_DCDC
+	bool
+	default n
+
+config GPIO_AS_PINRESET
+	default n
+
+if BOARD_SERIAL_BACKEND_CDC_ACM
+
+config USB_DEVICE_STACK
+	default y
+
+config USB_CDC_ACM
+	default y
+
+config UART_CONSOLE
+	default CONSOLE
+
+config USB_DEVICE_INITIALIZE_AT_BOOT
+	default y if !MCUBOOT
+
+config SHELL_BACKEND_SERIAL_CHECK_DTR
+	default SHELL
+
+config USB_DEVICE_REMOTE_WAKEUP
+	default n
+
+if LOG
+
+# Logger cannot use itself to log
+choice USB_CDC_ACM_LOG_LEVEL_CHOICE
+	default USB_CDC_ACM_LOG_LEVEL_OFF
+endchoice
+
+# Set USB log level to error only
+choice USB_DEVICE_LOG_LEVEL_CHOICE
+	default USB_DEVICE_LOG_LEVEL_ERR
+endchoice
+
+# Wait 4000ms at startup for logging
+config LOG_PROCESS_THREAD_STARTUP_DELAY_MS
+	default 4000
+
+endif # LOG
+
+if USB_DEVICE_STACK
+
+# Enable UART driver, needed for CDC ACM
+config SERIAL
+	default y
+
+endif # USB_DEVICE_STACK
+
+endif # BOARD_SERIAL_BACKEND_CDC_ACM
+
+config BOARD
+	default "esl"
+
+endif

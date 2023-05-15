@@ -1,0 +1,3 @@
+config BOARD_ESL
+	bool "Electronic Self-Label board"
+	depends on SOC_NRF52840_QIAA

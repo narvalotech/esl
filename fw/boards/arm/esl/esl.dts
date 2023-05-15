@@ -1,0 +1,96 @@
+/dts-v1/;
+#include <nordic/nrf52840_qiaa.dtsi>
+
+/ {
+	model = "Electronic Self-Label (epaper badge)";
+	compatible = "nordic,esl";
+
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	/* One discrete RGB LED below the display. */
+  	leds {
+  		compatible = "gpio-leds";
+		status = "okay";
+  		led_0 {
+  			gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+			label = "Red LED";
+  		};
+  		led_1 {
+  			gpios = <&gpio1 10 GPIO_ACTIVE_HIGH>;
+			label = "Green LED";
+  		};
+  		led_2 {
+  			gpios = <&gpio1 15 GPIO_ACTIVE_HIGH>;
+			label = "Blue LED";
+  		};
+  	};
+
+	/* Three tactile switches below the display */
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio1 6 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch 0";
+		};
+		button1: button_1 {
+			gpios = <&gpio1 2 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch 1";
+		};
+		button2: button_2 {
+			gpios = <&gpio1 4 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch 2";
+		};
+	};
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&gpio1 {
+	status = "okay";
+};
+
+&uart0 {
+	/* Disable UART, it isn't connected */
+	status = "disabled";
+};
+
+zephyr_udc0: &usbd {
+	compatible = "nordic,nrf-usbd";
+	status = "okay";
+
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0xC000>;
+		};
+		slot0_partition: partition@C000 {
+			label = "image-0";
+			reg = <0x0000C000 0x17000>;
+		};
+		slot1_partition: partition@23000 {
+			label = "image-1";
+			reg = <0x00023000 0x17000>;
+		};
+		storage_partition: partition@3a000 {
+			label = "storage";
+			reg = <0x0003a000 0x00006000>;
+		};
+	};
+};
