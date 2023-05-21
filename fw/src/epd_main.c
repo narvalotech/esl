@@ -33,7 +33,7 @@ void lcd_chkstatus(void);
 void EPD_Reset(void);
 
 static u8 lut_flag = 0;
-static u8 boot_flag = 0;
+static u8 first_image = 1;
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
@@ -90,7 +90,7 @@ void EPD_init(void)
 	uint8_t value;
 
 	lut_flag = 0;
-	boot_flag = 0;
+	first_image = 1;
 
 	EPD_W21_WriteCMD(EPD_CMD_PSR);
 	value = BIT(EPD_PSR_RST_N) |
@@ -145,9 +145,9 @@ void EPD_init(void)
 void PIC_display_GC(const unsigned char* picData)
 {
 	unsigned int i;
-	if(!boot_flag)
+	if(first_image)
 	{
-		boot_flag = 1;
+		first_image = 0;
 	}
 	else
 	{
@@ -168,7 +168,7 @@ void PIC_display_GC(const unsigned char* picData)
 void PIC_display_DU(const unsigned char* picData)
 {
 	unsigned int i;
-	if(!boot_flag)
+	if(first_image)
 	{
 		return ;//GC
 	}
