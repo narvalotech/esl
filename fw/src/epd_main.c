@@ -1,4 +1,5 @@
 #include "epd_main.h"
+#include "epd_regs.h"
 #include "utils.h"
 
 void EPD_W21_WriteCMD(unsigned char command);
@@ -35,6 +36,7 @@ void EPD_Reset(void);//
 static u8 lut_flag = 0;	//
 static u8 boot_flag = 0;//
 
+#define LUT_OTP
 
 /*********************************************************************************************
 
@@ -131,54 +133,83 @@ void EPD_Reset(void)
 /**/
 void EPD_init(void)
 {
+	uint8_t value;
+
 	lut_flag = 0;
 	boot_flag = 0;
-	EPD_W21_WriteCMD(0x00);
-	EPD_W21_WriteDATA(0xFF);//bit 3:Gate scan direction  bit 2:Source shift direction;
-					//bit
-	EPD_W21_WriteDATA(0x89);
+	EPD_W21_WriteCMD(EPD_CMD_PSR);
+#ifdef LUT_OTP
+	value = BIT(EPD_PSR_RST_N) |
+		BIT(EPD_PSR_SHD_N) |
+		BIT(EPD_PSR_SHL) |
+		BIT(EPD_PSR_UD) |
+		BIT(EPD_PSR_KWR) |
+		BIT(EPD_PSR_RES0) |
+		BIT(EPD_PSR_RES1) ;
 
-	EPD_W21_WriteCMD(0x01);
-	EPD_W21_WriteDATA(0x03);
-	EPD_W21_WriteDATA(0x00);
-	EPD_W21_WriteDATA(0x3F);
-	EPD_W21_WriteDATA(0x3F);
-	EPD_W21_WriteDATA(0x03);
+#else
+	value |= BIT(EPD_PSR_REG);
+#endif
+	EPD_W21_WriteDATA(value);//bit 3:Gate scan direction  bit 2:Source shift direction;
+	/* What is this? */
+	/* EPD_W21_WriteDATA(0x89); */
 
-	EPD_W21_WriteCMD(0x03);
-	EPD_W21_WriteDATA(0x00);
+	EPD_W21_WriteCMD(EPD_CMD_PWR);
+	EPD_W21_WriteDATA(BIT(EPD_PWR_VG_EN) | BIT(EPD_PWR_VS_EN));
+	EPD_W21_WriteDATA(0x00); /* 20V (default) */
+	EPD_W21_WriteDATA(0x3F); /* 15V (default) */
+	EPD_W21_WriteDATA(0x3F); /* 15V (default) */
+	EPD_W21_WriteDATA(0x03); /* 3V (value shouldn't matter) */
 
-	EPD_W21_WriteCMD(0x06);
+	/* uses default value, TODO: remove */
+	EPD_W21_WriteCMD(EPD_CMD_PFS);
+	EPD_W21_WriteDATA(0 << EPD_PFS_T);
+
+	EPD_W21_WriteCMD(EPD_CMD_BTST);
+	/* phase A & B:
+	 * - 6.58uS off time
+	 * - strength 5
+	 * - 40ms soft-start
+	 */
 	EPD_W21_WriteDATA(0x27);
 	EPD_W21_WriteDATA(0x27);
+	/* phase C:
+	 * - 6.58us off time
+	 * - strength 6
+	 */
 	EPD_W21_WriteDATA(0x2F);
 
-	EPD_W21_WriteCMD(0x30);
-	EPD_W21_WriteDATA(0x09);
+	/* uses default value, TODO: remove */
+	EPD_W21_WriteCMD(EPD_CMD_PLL);
+	EPD_W21_WriteDATA(0x09); /* 50Hz */
 
-	EPD_W21_WriteCMD(0x60);
+	/* uses default value, TODO: remove */
+	EPD_W21_WriteCMD(EPD_CMD_TCON);
 	EPD_W21_WriteDATA(0x22);
 
-	EPD_W21_WriteCMD(0x82);  // vcom
-	EPD_W21_WriteDATA(0x00); //
-
-	EPD_W21_WriteCMD(0xE3);
+	/* might not be necessary */
+	EPD_W21_WriteCMD(EPD_CMD_VCDS);
 	EPD_W21_WriteDATA(0x00);
 
-	EPD_W21_WriteCMD(0x41);
+	/* might not be necessary */
+	EPD_W21_WriteCMD(EPD_CMD_PWS);
 	EPD_W21_WriteDATA(0x00);
 
-	EPD_W21_WriteCMD(0x61);
-	EPD_W21_WriteDATA(0x80);
-	EPD_W21_WriteDATA(0x00);
-	EPD_W21_WriteDATA(0xFA);
-
-	EPD_W21_WriteCMD(0x65);
-	EPD_W21_WriteDATA(0x00);
-	EPD_W21_WriteDATA(0x00);
+	/* uses default value, TODO: remove */
+	EPD_W21_WriteCMD(EPD_CMD_TSE);
 	EPD_W21_WriteDATA(0x00);
 
-	EPD_W21_WriteCMD(0X50);
+	EPD_W21_WriteCMD(EPD_CMD_TRES);
+	EPD_W21_WriteDATA(128UL);
+	EPD_W21_WriteDATA(0);
+	EPD_W21_WriteDATA(250UL);
+
+	EPD_W21_WriteCMD(EPD_CMD_GSST);
+	EPD_W21_WriteDATA(0x00);
+	EPD_W21_WriteDATA(0x00);
+	EPD_W21_WriteDATA(0x00);
+
+	EPD_W21_WriteCMD(EPD_CMD_CDI);
 	EPD_W21_WriteDATA(0xB7);
 }
 
@@ -192,10 +223,10 @@ void PIC_display_GC(const unsigned char* picData)
 	}
 	else
 	{
-		EPD_W21_WriteCMD(0X50);
+		EPD_W21_WriteCMD(EPD_CMD_CDI);
 		EPD_W21_WriteDATA(0xD7);
 	}
-	EPD_W21_WriteCMD(0x13);  //Start data transfer
+	EPD_W21_WriteCMD(EPD_CMD_DTM2);  //Start data transfer
    	for(i=0;i<4000;i++)
    	{
   		EPD_W21_WriteDATA(*picData);  //Transfer the actual displayed data
@@ -216,11 +247,11 @@ void PIC_display_DU(const unsigned char* picData)
 	}
 	else
 	{
-		EPD_W21_WriteCMD(0X50);
+		EPD_W21_WriteCMD(EPD_CMD_CDI);
 		EPD_W21_WriteDATA(0xD7);
 	}
 
-	EPD_W21_WriteCMD(0x13);	  //Transfer new data
+	EPD_W21_WriteCMD(EPD_CMD_DTM2);	  //Transfer new data
 	for(i=0;i<EPD_WIDTH*EPD_HEIGHT/8;i++)
 	{
 		EPD_W21_WriteDATA(*picData);  //Transfer the actual displayed data
@@ -268,63 +299,56 @@ void PIC_display_DU(const unsigned char* picData)
 /* } */
 
 /**/
-// 
-void lcd_chkstatus(void)
-{
-	while(isEPD_W21_BUSY); //=0 busy
-}
-
-
-/**/
 void EPD_refresh(void)
 {
-	EPD_W21_WriteCMD(0x17);			//DISPLAY REFRESH
-	EPD_W21_WriteDATA(0xA5);
-	lcd_chkstatus();
+	EPD_W21_WriteCMD(EPD_CMD_AUTO);
+	EPD_W21_WriteDATA(EPD_CMD_ON_REFRESH_OFF);
+	while(isEPD_W21_BUSY); //=0 busy
 }
-
-
 
 /**/
 void EPD_sleep(void)
 {
-	EPD_W21_WriteCMD (0x07);  	//deep sleep
-	EPD_W21_WriteDATA(0xA5);
+	EPD_W21_WriteCMD (EPD_CMD_DSLP);
+	EPD_W21_WriteDATA(EPD_DSLP_MAGIC);
 }
 
 //LUT download
 static void lut_GC(void)
 {
+#ifdef LUT_OTP
+	return;
+#endif
 	u8 count;
-	EPD_W21_WriteCMD(0x20);							//vcom
+	EPD_W21_WriteCMD(EPD_CMD_LUTC);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R20_GC[count]);}
 
-	EPD_W21_WriteCMD(0x21);							//red not use
+	EPD_W21_WriteCMD(EPD_CMD_LUTWW);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R21_GC[count]);}
 
-	EPD_W21_WriteCMD(0x24);							//bb b
+	EPD_W21_WriteCMD(EPD_CMD_LUTK);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R24_GC[count]);}
 	if(lut_flag == 0)
 	{
-		EPD_W21_WriteCMD(0x22);							//bw r
+		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R22_GC[count]);}
 
-		EPD_W21_WriteCMD(0x23);							//wb w
+		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R23_GC[count]);}
 		lut_flag=1;
 	}
 	else
 	{
-		EPD_W21_WriteCMD(0x22);							//bw r
+		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R23_GC[count]);}
 
-		EPD_W21_WriteCMD(0x23);							//wb w
+		EPD_W21_WriteCMD(EPD_CMD_LUTWK);							//wb w
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R22_GC[count]);}
 		lut_flag=0;
@@ -334,37 +358,40 @@ static void lut_GC(void)
 //LUT download
 static void lut_DU(void)
 {
+#ifdef LUT_OTP
+	return;
+#endif
 	u8 count;
-	EPD_W21_WriteCMD(0x20);							//vcom
+	EPD_W21_WriteCMD(EPD_CMD_LUTC);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R20_DU[count]);}
 
-	EPD_W21_WriteCMD(0x21);							//red not use
+	EPD_W21_WriteCMD(EPD_CMD_LUTWW);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R21_DU[count]);}
 
-	EPD_W21_WriteCMD(0x24);							//bb b
+	EPD_W21_WriteCMD(EPD_CMD_LUTK);
 	for(count=0;count<56;count++)
 		{EPD_W21_WriteDATA(lut_R24_DU[count]);}
 
 	if (lut_flag==0)
 	{
-		EPD_W21_WriteCMD(0x22);							//bw r
+		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R22_DU[count]);}
 
-		EPD_W21_WriteCMD(0x23);							//wb w
+		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R23_DU[count]);}
 		lut_flag=1;
 	}
 	else
 	{
-		EPD_W21_WriteCMD(0x22);							//bw r
+		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R23_DU[count]);}
 
-		EPD_W21_WriteCMD(0x23);							//wb w
+		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R22_DU[count]);}
 		lut_flag=0;
