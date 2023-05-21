@@ -8,23 +8,38 @@ void EPD_W21_WriteDATA(unsigned char data);
 
 #define EPD_WIDTH   128UL
 #define EPD_HEIGHT  250UL
-#define EPD_W21_RST_0 mgpio_reset(DISP_RESET)
-#define EPD_W21_RST_1 mgpio_set(DISP_RESET)
-#define isEPD_W21_BUSY mgpio_read(DISP_BUSY)
+#define IMG_BYTES (EPD_WIDTH * EPD_HEIGHT / 8)
 
-static void lut_GC(void);//
-static void lut_DU(void);//
-void EPD_init(void);//
-void PIC_display_GC(const unsigned char* picData);//
-void PIC_display_DU(const unsigned char* picData);//
-void PIC_display(unsigned char NUM);//
-void EPD_sleep(void);//
-void EPD_refresh(void);//
-void lcd_chkstatus(void);//
-void EPD_Reset(void);//
+#define EPD_W21_MOSI_0	mgpio_reset(DISP_MOSI)
+#define EPD_W21_MOSI_1	mgpio_set(DISP_MOSI)
 
-static u8 lut_flag = 0;	//
-static u8 boot_flag = 0;//
+#define EPD_W21_CLK_0	mgpio_reset(DISP_SCK)
+#define EPD_W21_CLK_1	mgpio_set(DISP_SCK)
+
+#define EPD_W21_CS_0	mgpio_reset(DISP_CS)
+#define EPD_W21_CS_1	mgpio_set(DISP_CS)
+
+#define EPD_W21_DC_0	mgpio_reset(DISP_DC)
+#define EPD_W21_DC_1	mgpio_set(DISP_DC)
+
+#define EPD_W21_RST_0   mgpio_reset(DISP_RESET)
+#define EPD_W21_RST_1   mgpio_set(DISP_RESET)
+
+#define isEPD_W21_BUSY  mgpio_read(DISP_BUSY)
+
+static void lut_GC(void);
+static void lut_DU(void);
+void EPD_init(void);
+void PIC_display_GC(const unsigned char* picData);
+void PIC_display_DU(const unsigned char* picData);
+void PIC_display(unsigned char NUM);
+void EPD_sleep(void);
+void EPD_refresh(void);
+void lcd_chkstatus(void);
+void EPD_Reset(void);
+
+static u8 lut_flag = 0;
+static u8 boot_flag = 0;
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
@@ -64,19 +79,18 @@ int epd_main(void)
 	}
 }
 
-/**/
 void EPD_Reset(void)
 {
 	EPD_W21_RST_1;
-	delay_ms(10);	//At least 10ms delay
-	EPD_W21_RST_0;		// Module reset
-	delay_ms(100);//At least 10ms delay
+	delay_ms(10);
+
+	EPD_W21_RST_0;
+	delay_ms(100);
+
 	EPD_W21_RST_1;
-	delay_ms(100);	//At least 10ms delay
+	delay_ms(100);
 }
 
-
-/**/
 void EPD_init(void)
 {
 	uint8_t value;
@@ -134,7 +148,6 @@ void EPD_init(void)
 	EPD_W21_WriteDATA(0xB7);
 }
 
-/**/
 void PIC_display_GC(const unsigned char* picData)
 {
 	unsigned int i;
@@ -147,18 +160,17 @@ void PIC_display_GC(const unsigned char* picData)
 		EPD_W21_WriteCMD(EPD_CMD_CDI);
 		EPD_W21_WriteDATA(0xD7);
 	}
-	EPD_W21_WriteCMD(EPD_CMD_DTM2);  //Start data transfer
-   	for(i=0;i<4000;i++)
+
+	EPD_W21_WriteCMD(EPD_CMD_DTM2);
+   	for(i=0; i<IMG_BYTES; i++)
    	{
-  		EPD_W21_WriteDATA(*picData);  //Transfer the actual displayed data
+  		EPD_W21_WriteDATA(*picData);
    		picData++;
    	}
 	lut_GC();
 	EPD_refresh();
 }
 
-
-/**/
 void PIC_display_DU(const unsigned char* picData)
 {
 	unsigned int i;
@@ -172,17 +184,16 @@ void PIC_display_DU(const unsigned char* picData)
 		EPD_W21_WriteDATA(0xD7);
 	}
 
-	EPD_W21_WriteCMD(EPD_CMD_DTM2);	  //Transfer new data
-	for(i=0;i<EPD_WIDTH*EPD_HEIGHT/8;i++)
+	EPD_W21_WriteCMD(EPD_CMD_DTM2);
+	for(i=0; i<IMG_BYTES; i++)
 	{
-		EPD_W21_WriteDATA(*picData);  //Transfer the actual displayed data
+		EPD_W21_WriteDATA(*picData);
 		picData++;
 	}
-	lut_DU();     		 //Transfer wavefrom data
-	EPD_refresh();		//DISPLAY REFRESH
+	lut_DU();
+	EPD_refresh();
 }
 
-/**/
 void EPD_refresh(void)
 {
 	EPD_W21_WriteCMD(EPD_CMD_AUTO);
@@ -194,14 +205,12 @@ void EPD_refresh(void)
 	}
 }
 
-/**/
 void EPD_sleep(void)
 {
 	EPD_W21_WriteCMD (EPD_CMD_DSLP);
 	EPD_W21_WriteDATA(EPD_DSLP_MAGIC);
 }
 
-//LUT download
 static void lut_GC(void)
 {
 #ifdef LUT_OTP
@@ -236,14 +245,13 @@ static void lut_GC(void)
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R23_GC[count]);}
 
-		EPD_W21_WriteCMD(EPD_CMD_LUTWK);							//wb w
+		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
 		for(count=0;count<56;count++)
 			{EPD_W21_WriteDATA(lut_R22_GC[count]);}
 		lut_flag=0;
 	}
 }
 
-//LUT download
 static void lut_DU(void)
 {
 #ifdef LUT_OTP
@@ -287,20 +295,6 @@ static void lut_DU(void)
 }
 
 
-/*************************SPI***********************************************************/
-
-#define EPD_W21_MOSI_0	mgpio_reset(DISP_MOSI)
-#define EPD_W21_MOSI_1	mgpio_set(DISP_MOSI)
-
-#define EPD_W21_CLK_0	mgpio_reset(DISP_SCK)
-#define EPD_W21_CLK_1	mgpio_set(DISP_SCK)
-
-#define EPD_W21_CS_0	mgpio_reset(DISP_CS)
-#define EPD_W21_CS_1	mgpio_set(DISP_CS)
-
-#define EPD_W21_DC_0	mgpio_reset(DISP_DC)
-#define EPD_W21_DC_1	mgpio_set(DISP_DC)
-
 //SPI
 void SPI_Write(unsigned char value)
 {
@@ -328,7 +322,7 @@ void EPD_W21_WriteCMD(unsigned char command)
 	EPD_W21_DC_0;		// command write
 	SPI_Write(command);
 	EPD_W21_CS_1;
-	EPD_W21_DC_1;		//
+	EPD_W21_DC_1;
 }
 /*SPI*/
 void EPD_W21_WriteDATA(unsigned char data)
@@ -339,8 +333,6 @@ void EPD_W21_WriteDATA(unsigned char data)
 	EPD_W21_DC_1;		// data write
 	SPI_Write(data);
 	EPD_W21_CS_1;
-	EPD_W21_DC_1;		//
+	EPD_W21_DC_1;
 	EPD_W21_MOSI_0;
 }
-
-/***************************************************************************************///GC
