@@ -47,78 +47,37 @@ EPD_WIDTH*EPD_HEIGHT/8byte1bit1
 #define IMG_DELAY_MS 500
 int epd_main(void)
 {
-
-	/* GPIO_Configuration(); */
-	EPD_Reset();                  //
-	EPD_init(); 		      //  GC
-	PIC_display_GC(gImage_1);	//1
+	EPD_Reset();
+	EPD_init();
+	PIC_display_GC(gImage_1);
 	delay_ms(300);
 	while(1)
 	{
-		PIC_display_DU(gImage_1);     //DU1
+		for (int i=0; i<3; i++) {
+			PIC_display_DU(gImage_1);
+			delay_ms(IMG_DELAY_MS);
+			PIC_display_DU(gImage_2);
+			delay_ms(IMG_DELAY_MS);
+			PIC_display_DU(gImage_3);
+			delay_ms(IMG_DELAY_MS);
+		}
+
+		/* Last cycle can only display 2
+		 * TODO: test the limit of partial-refreshes */
+		PIC_display_DU(gImage_1);
 		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_2);     //DU2
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_3);     //DU3
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_1);     //DU4
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_2);     //DU5
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_3);     //DU6
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_1);     //DU7
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_2);     //DU8
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_3);     //DU9
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_DU(gImage_1);     //DU10
-		delay_ms(IMG_DELAY_MS);
-		PIC_display_GC(gImage_2);     //GC110
+		PIC_display_GC(gImage_2);
 		delay_ms(IMG_DELAY_MS);
 
-		EPD_sleep();	//
+		EPD_sleep();
 		delay_ms(300);
-		//
-		EPD_Reset();                //
-		//
+		EPD_Reset();
 		EPD_init();
-		//GC
-		PIC_display_GC(gImage_3);   //EPD_picture
+
+		PIC_display_GC(gImage_3);
 		delay_ms(IMG_DELAY_MS);
 	}
-
 }
-
-/*GPIO*/
-/* void GPIO_Configuration(void) */
-/* { */
-/*   GPIO_InitTypeDef GPIO_InitStructure; */
-
-/*   RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOD|RCC_APB2Periph_GPIOE,ENABLE); */
-/* //============================================================================= */
-/* //LED -> PE12   D/C-->PE15	RST -- PE14 */
-/* //============================================================================= */
-/*   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_15 |GPIO_Pin_14; */
-/*   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz; */
-/*   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; */
-/*   GPIO_Init(GPIOE, &GPIO_InitStructure); */
-
-/* //SDA--->PD10  SCK-->PD9  CS-->PD8 */
-/*   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10;		//Port configuration */
-/*   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; */
-/*   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz; */
-/*   GPIO_Init(GPIOD, &GPIO_InitStructure); */
-
-/* //BUSY--->PE13     KEY -- PE11 */
-/*   GPIO_InitStructure.GPIO_Pin  = GPIO_Pin_11|GPIO_Pin_13 ; */
-/*   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;		//busy,busy */
-/*   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz; */
-/*   GPIO_Init(GPIOE, &GPIO_InitStructure);				//Initialize GPIO */
-
-/* } */
-
 
 /**/
 void EPD_Reset(void)
