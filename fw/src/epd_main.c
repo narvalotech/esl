@@ -5,8 +5,8 @@
 void EPD_W21_WriteCMD(unsigned char command);
 void EPD_W21_WriteDATA(unsigned char data);
 
-#define EPD_WIDTH   128
-#define EPD_HEIGHT  250
+#define EPD_WIDTH   128UL
+#define EPD_HEIGHT  250UL
 #define EPD_W21_RST_0 mgpio_reset(DISP_RESET)
 #define EPD_W21_RST_1 mgpio_set(DISP_RESET)
 #define isEPD_W21_BUSY mgpio_read(DISP_BUSY)
@@ -201,9 +201,9 @@ void EPD_init(void)
 	EPD_W21_WriteDATA(0x00);
 
 	EPD_W21_WriteCMD(EPD_CMD_TRES);
-	EPD_W21_WriteDATA(128UL);
+	EPD_W21_WriteDATA(EPD_WIDTH);
 	EPD_W21_WriteDATA(0);
-	EPD_W21_WriteDATA(250UL);
+	EPD_W21_WriteDATA(EPD_HEIGHT);
 
 	EPD_W21_WriteCMD(EPD_CMD_GSST);
 	EPD_W21_WriteDATA(0x00);
