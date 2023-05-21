@@ -43,6 +43,7 @@ static u8 boot_flag = 0;//
  -->  -->  --> ... --> 10DUGC,
 EPD_WIDTH*EPD_HEIGHT/8byte1bit1
 *********************************************************************************************/
+#define IMG_DELAY_MS 500
 int epd_main(void)
 {
 
@@ -54,27 +55,27 @@ int epd_main(void)
 	while(1)
 	{
 		PIC_display_DU(gImage_1);     //DU1
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_2);     //DU2
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_3);     //DU3
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_1);     //DU4
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_2);     //DU5
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_3);     //DU6
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_1);     //DU7
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_2);     //DU8
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_3);     //DU9
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_DU(gImage_1);     //DU10
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 		PIC_display_GC(gImage_2);     //GC110
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 
 		EPD_sleep();	//
 		delay_ms(300);
@@ -84,7 +85,7 @@ int epd_main(void)
 		EPD_init();
 		//GC
 		PIC_display_GC(gImage_3);   //EPD_picture
-		DELAY_S(2);
+		delay_ms(IMG_DELAY_MS);
 	}
 
 }
