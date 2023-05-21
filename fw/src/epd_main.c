@@ -10,12 +10,6 @@ void EPD_W21_WriteDATA(unsigned char data);
 #define EPD_HEIGHT  250UL
 #define IMG_BYTES (EPD_WIDTH * EPD_HEIGHT / 8)
 
-#define EPD_W21_MOSI_0	mgpio_reset(DISP_MOSI)
-#define EPD_W21_MOSI_1	mgpio_set(DISP_MOSI)
-
-#define EPD_W21_CLK_0	mgpio_reset(DISP_SCK)
-#define EPD_W21_CLK_1	mgpio_set(DISP_SCK)
-
 #define EPD_W21_CS_0	mgpio_reset(DISP_CS)
 #define EPD_W21_CS_1	mgpio_set(DISP_CS)
 
@@ -295,44 +289,20 @@ static void lut_DU(void)
 }
 
 
-//SPI
-void SPI_Write(unsigned char value)
-{
-	mspi_write_byte(value);
-	/* unsigned char i; */
-
-	/* for(i=0; i<8; i++) */
-	/* { */
-	/* 	EPD_W21_CLK_0; */
-
-	/* 	if(value & 0x80) */
-	/* 		EPD_W21_MOSI_1; */
-	/* 	else */
-	/* 		EPD_W21_MOSI_0; */
-	/* 	value = (value << 1); */
-	/* 	EPD_W21_CLK_1; */
-
-	/* } */
-}
-/*SPI*/
 void EPD_W21_WriteCMD(unsigned char command)
 {
-
   	EPD_W21_CS_0;
-	EPD_W21_DC_0;		// command write
-	SPI_Write(command);
+	EPD_W21_DC_0;		/* command */
+	mspi_write_byte(command);
 	EPD_W21_CS_1;
 	EPD_W21_DC_1;
 }
-/*SPI*/
+
 void EPD_W21_WriteDATA(unsigned char data)
 {
-
-	EPD_W21_MOSI_0;
   	EPD_W21_CS_0;
-	EPD_W21_DC_1;		// data write
-	SPI_Write(data);
+	EPD_W21_DC_1;		/* data */
+	mspi_write_byte(data);
 	EPD_W21_CS_1;
 	EPD_W21_DC_1;
-	EPD_W21_MOSI_0;
 }
