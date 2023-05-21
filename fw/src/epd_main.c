@@ -162,10 +162,6 @@ void EPD_init(void)
 	EPD_W21_WriteDATA(0x3F); /* 15V (default) */
 	EPD_W21_WriteDATA(0x03); /* 3V (value shouldn't matter) */
 
-	/* uses default value, TODO: remove */
-	EPD_W21_WriteCMD(EPD_CMD_PFS);
-	EPD_W21_WriteDATA(0 << EPD_PFS_T);
-
 	EPD_W21_WriteCMD(EPD_CMD_BTST);
 	/* phase A & B:
 	 * - 6.58uS off time
@@ -179,26 +175,6 @@ void EPD_init(void)
 	 * - strength 6
 	 */
 	EPD_W21_WriteDATA(0x2F);
-
-	/* uses default value, TODO: remove */
-	EPD_W21_WriteCMD(EPD_CMD_PLL);
-	EPD_W21_WriteDATA(0x09); /* 50Hz */
-
-	/* uses default value, TODO: remove */
-	EPD_W21_WriteCMD(EPD_CMD_TCON);
-	EPD_W21_WriteDATA(0x22);
-
-	/* might not be necessary */
-	EPD_W21_WriteCMD(EPD_CMD_VCDS);
-	EPD_W21_WriteDATA(0x00);
-
-	/* might not be necessary */
-	EPD_W21_WriteCMD(EPD_CMD_PWS);
-	EPD_W21_WriteDATA(0x00);
-
-	/* uses default value, TODO: remove */
-	EPD_W21_WriteCMD(EPD_CMD_TSE);
-	EPD_W21_WriteDATA(0x00);
 
 	EPD_W21_WriteCMD(EPD_CMD_TRES);
 	EPD_W21_WriteDATA(EPD_WIDTH);
