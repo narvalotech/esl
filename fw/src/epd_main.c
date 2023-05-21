@@ -23,14 +23,12 @@ void EPD_W21_WriteDATA(unsigned char data);
 
 static void lut_GC(void);
 static void lut_DU(void);
-void EPD_init(void);
-void PIC_display_GC(const unsigned char* picData);
-void PIC_display_DU(const unsigned char* picData);
-void PIC_display(unsigned char NUM);
-void EPD_sleep(void);
-void EPD_refresh(void);
-void lcd_chkstatus(void);
-void EPD_Reset(void);
+void epd_init(void);
+void epd_display_full(const unsigned char* picData);
+void epd_display_partial(const unsigned char* picData);
+void epd_dsleep(void);
+void epd_refresh(void);
+void epd_reset(void);
 
 static uint8_t first_image = 1;
 
@@ -40,39 +38,39 @@ static uint8_t first_image = 1;
 #define IMG_DELAY_MS 500
 int epd_main(void)
 {
-	EPD_Reset();
-	EPD_init();
-	PIC_display_GC(gImage_1);
+	epd_reset();
+	epd_init();
+	epd_display_full(gImage_1);
 	delay_ms(300);
 	while(1)
 	{
 		for (int i=0; i<3; i++) {
-			PIC_display_DU(gImage_1);
+			epd_display_partial(gImage_1);
 			delay_ms(IMG_DELAY_MS);
-			PIC_display_DU(gImage_2);
+			epd_display_partial(gImage_2);
 			delay_ms(IMG_DELAY_MS);
-			PIC_display_DU(gImage_3);
+			epd_display_partial(gImage_3);
 			delay_ms(IMG_DELAY_MS);
 		}
 
 		/* Last cycle can only display 2
 		 * TODO: test the limit of partial-refreshes */
-		PIC_display_DU(gImage_1);
+		epd_display_partial(gImage_1);
 		delay_ms(IMG_DELAY_MS);
-		PIC_display_GC(gImage_2);
+		epd_display_full(gImage_2);
 		delay_ms(IMG_DELAY_MS);
 
-		EPD_sleep();
+		epd_dsleep();
 		delay_ms(300);
-		EPD_Reset();
-		EPD_init();
+		epd_reset();
+		epd_init();
 
-		PIC_display_GC(gImage_3);
+		epd_display_full(gImage_3);
 		delay_ms(IMG_DELAY_MS);
 	}
 }
 
-void EPD_Reset(void)
+void epd_reset(void)
 {
 	EPD_W21_RST_1;
 	delay_ms(10);
@@ -92,7 +90,7 @@ void write_cdi(bool boot)
 	EPD_W21_WriteDATA(val);
 }
 
-void EPD_init(void)
+void epd_init(void)
 {
 	uint8_t value;
 
@@ -147,7 +145,7 @@ void EPD_init(void)
 	write_cdi(true);
 }
 
-void PIC_display_GC(const unsigned char* picData)
+void epd_display_full(const unsigned char* picData)
 {
 	EPD_W21_WriteCMD(EPD_CMD_DTM2);
    	for(unsigned int i=0; i<IMG_BYTES; i++) {
@@ -156,7 +154,7 @@ void PIC_display_GC(const unsigned char* picData)
    	}
 
 	lut_GC();
-	EPD_refresh();
+	epd_refresh();
 	write_cdi(false);
 
 	if(first_image) {
@@ -164,7 +162,7 @@ void PIC_display_GC(const unsigned char* picData)
 	}
 }
 
-void PIC_display_DU(const unsigned char* picData)
+void epd_display_partial(const unsigned char* picData)
 {
 	if(first_image) {
 		/* one full refresh is necessary after boot */
@@ -178,11 +176,11 @@ void PIC_display_DU(const unsigned char* picData)
 	}
 
 	lut_DU();
-	EPD_refresh();
+	epd_refresh();
 	write_cdi(false);
 }
 
-void EPD_refresh(void)
+void epd_refresh(void)
 {
 	EPD_W21_WriteCMD(EPD_CMD_AUTO);
 	EPD_W21_WriteDATA(EPD_CMD_ON_REFRESH_OFF);
@@ -193,7 +191,7 @@ void EPD_refresh(void)
 	}
 }
 
-void EPD_sleep(void)
+void epd_dsleep(void)
 {
 	EPD_W21_WriteCMD (EPD_CMD_DSLP);
 	EPD_W21_WriteDATA(EPD_DSLP_MAGIC);
