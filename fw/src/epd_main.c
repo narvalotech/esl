@@ -36,7 +36,8 @@ void EPD_Reset(void);//
 static u8 lut_flag = 0;	//
 static u8 boot_flag = 0;//
 
-#define LUT_OTP
+/* using on-board LUTs doesn't work */
+/* #define LUT_OTP */
 
 /*********************************************************************************************
 
