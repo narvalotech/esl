@@ -29,11 +29,6 @@ static u8 boot_flag = 0;//
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
 
-/*********************************************************************************************
-
- -->  -->  --> ... --> 10DUGC,
-EPD_WIDTH*EPD_HEIGHT/8byte1bit1
-*********************************************************************************************/
 #define IMG_DELAY_MS 500
 int epd_main(void)
 {
@@ -186,43 +181,6 @@ void PIC_display_DU(const unsigned char* picData)
 	lut_DU();     		 //Transfer wavefrom data
 	EPD_refresh();		//DISPLAY REFRESH
 }
-
-//
-/* void PIC_display(unsigned char NUM) */
-/* { */
-
-/* 	unsigned int row, column; */
-/*   	if(!boot_flag) */
-/* 	{ */
-/* 		boot_flag = 1; */
-/* 	} */
-/* 	else */
-/* 	{ */
-/* 		EPD_W21_WriteCMD(0X50); */
-/* 		EPD_W21_WriteDATA(0xD7); */
-/* 	} */
-
-/* 	EPD_W21_WriteCMD(0x13);		     //Transfer new data */
-/* 	for(column=0; column<EPD_HEIGHT; column++) */
-/* 	{ */
-/* 		for(row=0; row<EPD_WIDTH/8; row++) */
-/* 		{ */
-/* 			/\*10*\/ */
-/* 			switch (NUM) */
-/* 			{ */
-/* 				case PIC_WHITE: */
-/* 				EPD_W21_WriteDATA(0xFF); */
-/* 				break; */
-
-/* 				case PIC_BLACK: */
-/* 				EPD_W21_WriteDATA(0x00); */
-/* 				break; */
-/* 			} */
-/* 		} */
-/* 	} */
-/* 	lut_GC(); */
-/* 	EPD_refresh(); */
-/* } */
 
 /**/
 void EPD_refresh(void)
@@ -384,39 +342,5 @@ void EPD_W21_WriteDATA(unsigned char data)
 	EPD_W21_DC_1;		//
 	EPD_W21_MOSI_0;
 }
-
-/**********************************
-
-	u8 data = 0;
-	EPD_W21_WriteCMD(0x71);	//status bit read
-	data = EPD_read();	//
-**********************************/
-/* unsigned char EPD_read(void) */
-/* { */
-/* 	unsigned char i; */
-/* 	unsigned char DATA_BUF; */
-
-/* 	EPD_W21_CS_0; */
-/*       delay_us(5); */
-/* 	SDA_IN();			// */
-/* 	EPD_W21_DC_1;		// data read */
-/*       delay_us(5); */
-/* 	EPD_W21_CLK_0; */
-/* 	delay_us(5); */
-/*       for(i=0;i<8;i++ ) */
-/* 	{ */
-/* 		DATA_BUF=DATA_BUF<<1; */
-/* 		DATA_BUF|=READ_SDA;	//READ_SDA */
-/* 		EPD_W21_CLK_1; */
-/* 		delay_us(5); */
-/* 		EPD_W21_CLK_0; */
-/*         	delay_us(5); */
-/*       } */
-/*       delay_us(5); */
-/* 	EPD_W21_CS_1; */
-/* 	EPD_W21_DC_1; */
-/* 	SDA_OUT();		// */
-/*       return DATA_BUF; */
-/* } */
 
 /***************************************************************************************///GC
