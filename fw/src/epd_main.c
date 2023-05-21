@@ -138,8 +138,8 @@ void EPD_init(void)
 
 	lut_flag = 0;
 	boot_flag = 0;
+
 	EPD_W21_WriteCMD(EPD_CMD_PSR);
-#ifdef LUT_OTP
 	value = BIT(EPD_PSR_RST_N) |
 		BIT(EPD_PSR_SHD_N) |
 		BIT(EPD_PSR_SHL) |
@@ -147,8 +147,7 @@ void EPD_init(void)
 		BIT(EPD_PSR_KWR) |
 		BIT(EPD_PSR_RES0) |
 		BIT(EPD_PSR_RES1) ;
-
-#else
+#ifndef LUT_OTP
 	value |= BIT(EPD_PSR_REG);
 #endif
 	EPD_W21_WriteDATA(value);//bit 3:Gate scan direction  bit 2:Source shift direction;
