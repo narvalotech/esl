@@ -85,6 +85,14 @@ void EPD_Reset(void)
 	delay_ms(100);
 }
 
+void write_cdi(bool boot)
+{
+	uint8_t val = boot ? 0xB7 : 0xD7;
+
+	EPD_W21_WriteCMD(EPD_CMD_CDI);
+	EPD_W21_WriteDATA(val);
+}
+
 void EPD_init(void)
 {
 	uint8_t value;
@@ -138,54 +146,42 @@ void EPD_init(void)
 	EPD_W21_WriteDATA(0x00);
 	EPD_W21_WriteDATA(0x00);
 
-	EPD_W21_WriteCMD(EPD_CMD_CDI);
-	EPD_W21_WriteDATA(0xB7);
+	write_cdi(true);
 }
 
 void PIC_display_GC(const unsigned char* picData)
 {
-	unsigned int i;
-	if(first_image)
-	{
+	if(first_image) {
 		first_image = 0;
-	}
-	else
-	{
-		EPD_W21_WriteCMD(EPD_CMD_CDI);
-		EPD_W21_WriteDATA(0xD7);
 	}
 
 	EPD_W21_WriteCMD(EPD_CMD_DTM2);
-   	for(i=0; i<IMG_BYTES; i++)
-   	{
+   	for(unsigned int i=0; i<IMG_BYTES; i++) {
   		EPD_W21_WriteDATA(*picData);
    		picData++;
    	}
+
 	lut_GC();
 	EPD_refresh();
+	write_cdi(false);
 }
 
 void PIC_display_DU(const unsigned char* picData)
 {
-	unsigned int i;
-	if(first_image)
-	{
-		return ;//GC
-	}
-	else
-	{
-		EPD_W21_WriteCMD(EPD_CMD_CDI);
-		EPD_W21_WriteDATA(0xD7);
+	if(first_image) {
+		/* one full refresh is necessary after boot */
+		return;
 	}
 
 	EPD_W21_WriteCMD(EPD_CMD_DTM2);
-	for(i=0; i<IMG_BYTES; i++)
-	{
+	for(unsigned int i=0; i<IMG_BYTES; i++) {
 		EPD_W21_WriteDATA(*picData);
 		picData++;
 	}
+
 	lut_DU();
 	EPD_refresh();
+	write_cdi(false);
 }
 
 void EPD_refresh(void)
