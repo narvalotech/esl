@@ -10,4 +10,5 @@ project(app)
 target_include_directories(app PRIVATE ${CMAKE_BINARY_DIR}/app/include src)
 
 target_sources(app PRIVATE
+  src/epd_main.c
   src/main.c)

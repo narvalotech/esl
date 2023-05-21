@@ -9,6 +9,51 @@
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
 #include <zephyr/drivers/uart.h>
+#include <nrf.h>
+#include "utils.h"
+
+#if 1
+extern void epd_main(void);
+
+static void init_gpio(void)
+{
+	uint32_t outputs = GP(DISP_MOSI) | GP(DISP_SCK) | GP(DISP_CS) | GP(DISP_DC) | GP(DISP_RESET);
+	uint32_t inputs = GP(DISP_BUSY);
+
+	NRF_P0->DIRSET = outputs;
+	NRF_P0->DIRCLR = inputs;
+}
+
+#define INST NRF_SPI0
+
+static void init_spi(void)
+{
+	INST->PSEL.SCK =   DISP_SCK;
+	INST->PSEL.MOSI =  DISP_MOSI;
+	INST->PSEL.MISO =  0x80000000; /* not connected */
+	/* INST->PSEL.CSN =   0x80000000; /\* not connected *\/ */
+
+	INST->FREQUENCY = SPIM_FREQUENCY_FREQUENCY_M2;
+	INST->CONFIG = 0;
+
+	INST->ENABLE = 1UL;
+	/* INST->ENABLE = 7UL; */
+	/* INST->TASKS_STOP = 1; */
+	/* INST->RXD.MAXCNT = 0; */
+}
+
+int main(void)
+{
+	init_gpio();
+	init_spi();
+	epd_main();
+
+	return 0;
+}
+#endif
+
+#if 0
+
 #if !defined(CONFIG_DISPLAY)
 
 BUILD_ASSERT(DT_NODE_HAS_COMPAT(DT_CHOSEN(zephyr_console), zephyr_cdc_acm_uart),
@@ -128,3 +173,4 @@ int main(void)
 }
 #endif
 
+#endif
