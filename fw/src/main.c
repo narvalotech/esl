@@ -22,6 +22,9 @@ static void init_gpio(void)
 
 	NRF_P0->DIRSET = outputs;
 	NRF_P0->DIRCLR = inputs;
+
+	/* connect input buffer */
+	NRF_P0->PIN_CNF[DISP_BUSY] = 0;
 }
 
 #define INST NRF_SPI0

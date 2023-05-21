@@ -304,7 +304,11 @@ void EPD_refresh(void)
 {
 	EPD_W21_WriteCMD(EPD_CMD_AUTO);
 	EPD_W21_WriteDATA(EPD_CMD_ON_REFRESH_OFF);
-	while(isEPD_W21_BUSY); //=0 busy
+
+	while(isEPD_W21_BUSY == 0) {
+		/* around 500ms in partial refresh, >1s for full refresh */
+		k_msleep(10);
+	}
 }
 
 /**/
