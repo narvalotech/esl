@@ -32,7 +32,7 @@ void EPD_refresh(void);
 void lcd_chkstatus(void);
 void EPD_Reset(void);
 
-static u8 first_image = 1;
+static uint8_t first_image = 1;
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */

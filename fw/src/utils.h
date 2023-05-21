@@ -34,8 +34,6 @@ static inline bool mgpio_read(uint32_t bit)
 #define delay_ms(d) k_msleep(d)
 #define DELAY_S(d) k_sleep(K_SECONDS(d))
 
-typedef uint8_t u8;
-
 #define INST NRF_SPI0
 
 static inline void mspi_write_byte(uint8_t byte)
