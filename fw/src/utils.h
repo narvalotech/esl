@@ -34,19 +34,21 @@ static inline bool mgpio_read(uint32_t bit)
 #define delay_ms(d) k_msleep(d)
 #define DELAY_S(d) k_sleep(K_SECONDS(d))
 
-#define INST NRF_SPI0
+void mspi_write_byte(uint8_t byte);
 
-static inline void mspi_write_byte(uint8_t byte)
-{
-	INST->EVENTS_READY = 0;
-	INST->TXD = byte;
+/* #define INST NRF_SPI0 */
 
-	while(INST->EVENTS_READY != 1) {
-		__NOP();
-	}
-	(void)INST->RXD;
-	INST->EVENTS_READY = 0;
-}
+/* static inline void mspi_write_byte(uint8_t byte) */
+/* { */
+/* 	INST->EVENTS_READY = 0; */
+/* 	INST->TXD = byte; */
+
+/* 	while(INST->EVENTS_READY != 1) { */
+/* 		__NOP(); */
+/* 	} */
+/* 	(void)INST->RXD; */
+/* 	INST->EVENTS_READY = 0; */
+/* } */
 
 /* #define INST NRF_SPIM3 */
 

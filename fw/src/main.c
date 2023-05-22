@@ -9,8 +9,12 @@
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
 #include <zephyr/drivers/uart.h>
+#include <zephyr/drivers/spi.h>
 #include <nrf.h>
 #include "utils.h"
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(main, 4);
 
 #if 1
 extern void epd_main(void);
@@ -27,6 +31,7 @@ static void init_gpio(void)
 	NRF_P0->PIN_CNF[DISP_BUSY] = 0;
 }
 
+#if 0
 #define INST NRF_SPI0
 
 static void init_spi(void)
@@ -43,6 +48,36 @@ static void init_spi(void)
 	/* INST->ENABLE = 7UL; */
 	/* INST->TASKS_STOP = 1; */
 	/* INST->RXD.MAXCNT = 0; */
+}
+#endif
+
+const struct spi_dt_spec spi_dev = SPI_DT_SPEC_GET(DT_NODELABEL(se0213q04), 0, 0);
+
+static void init_spi(void)
+{
+	if(spi_is_ready_dt(&spi_dev)) {
+		LOG_INF("spi initialized");
+	} else {
+		LOG_ERR("spi not initialized");
+		k_panic();
+	}
+
+	LOG_DBG("spi_dev.bus = %p", spi_dev.bus);
+	LOG_DBG("spi_dev.config.cs.gpio.port = %p", spi_dev.config.cs->gpio.port);
+	LOG_DBG("spi_dev.config.cs.gpio.pin = %u", spi_dev.config.cs->gpio.pin);
+}
+
+void mspi_write_byte(uint8_t byte)
+{
+	uint8_t buf[1] = {byte};
+	const struct spi_buf tx = {.buf = buf, .len = 1};
+	const struct spi_buf_set tx_bufs = {.buffers = &tx, .count = 1};
+
+	int err = spi_transceive_dt(&spi_dev, &tx_bufs, NULL);
+	if (err) {
+		LOG_ERR("SPI transfer failed: %d", err);
+		k_panic();
+	}
 }
 
 int main(void)

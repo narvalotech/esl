@@ -1,0 +1,6 @@
+description: |
+    Temporary SPI epaper bindings
+
+compatible: "epd-spi"
+
+include: [spi-device.yaml]
