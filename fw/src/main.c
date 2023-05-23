@@ -76,10 +76,6 @@ static void init_spi(void)
 		LOG_ERR("spi not initialized");
 		k_panic();
 	}
-
-	LOG_DBG("spi_dev.bus = %p", spi_dev.bus);
-	LOG_DBG("spi_dev.config.cs.gpio.port = %p", spi_dev.config.cs.gpio.port);
-	LOG_DBG("spi_dev.config.cs.gpio.pin = %u", spi_dev.config.cs.gpio.pin);
 }
 
 void mspi_write_byte(uint8_t byte)
