@@ -49,9 +49,24 @@ static void init_spi(void)
 	/* INST->TASKS_STOP = 1; */
 	/* INST->RXD.MAXCNT = 0; */
 }
-#endif
 
-const struct spi_dt_spec spi_dev = SPI_DT_SPEC_GET(DT_NODELABEL(se0213q04), 0, 0);
+inline void mspi_write_byte(uint8_t byte)
+{
+	INST->EVENTS_READY = 0;
+	INST->TXD = byte;
+
+	while(INST->EVENTS_READY != 1) {
+		__NOP();
+	}
+	(void)INST->RXD;
+	INST->EVENTS_READY = 0;
+}
+
+#else
+
+#define SPI_OP SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_MODE_CPHA | SPI_WORD_SET(8) | SPI_LINES_SINGLE
+
+const struct spi_dt_spec spi_dev = SPI_DT_SPEC_GET(DT_NODELABEL(se0213q04), SPI_OP, 0);
 
 static void init_spi(void)
 {
@@ -63,8 +78,8 @@ static void init_spi(void)
 	}
 
 	LOG_DBG("spi_dev.bus = %p", spi_dev.bus);
-	LOG_DBG("spi_dev.config.cs.gpio.port = %p", spi_dev.config.cs->gpio.port);
-	LOG_DBG("spi_dev.config.cs.gpio.pin = %u", spi_dev.config.cs->gpio.pin);
+	LOG_DBG("spi_dev.config.cs.gpio.port = %p", spi_dev.config.cs.gpio.port);
+	LOG_DBG("spi_dev.config.cs.gpio.pin = %u", spi_dev.config.cs.gpio.pin);
 }
 
 void mspi_write_byte(uint8_t byte)
@@ -79,6 +94,7 @@ void mspi_write_byte(uint8_t byte)
 		k_panic();
 	}
 }
+#endif
 
 int main(void)
 {

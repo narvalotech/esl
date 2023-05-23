@@ -36,20 +36,6 @@ static inline bool mgpio_read(uint32_t bit)
 
 void mspi_write_byte(uint8_t byte);
 
-/* #define INST NRF_SPI0 */
-
-/* static inline void mspi_write_byte(uint8_t byte) */
-/* { */
-/* 	INST->EVENTS_READY = 0; */
-/* 	INST->TXD = byte; */
-
-/* 	while(INST->EVENTS_READY != 1) { */
-/* 		__NOP(); */
-/* 	} */
-/* 	(void)INST->RXD; */
-/* 	INST->EVENTS_READY = 0; */
-/* } */
-
 /* #define INST NRF_SPIM3 */
 
 /* static inline void mspi_write_byte(uint8_t byte) */

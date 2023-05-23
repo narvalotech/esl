@@ -247,18 +247,14 @@ static void lut_DU(void)
 
 void EPD_W21_WriteCMD(unsigned char command)
 {
-  	EPD_W21_CS_0;
 	EPD_W21_DC_0;		/* command */
 	mspi_write_byte(command);
-	EPD_W21_CS_1;
 	EPD_W21_DC_1;
 }
 
 void EPD_W21_WriteDATA(unsigned char data)
 {
-  	EPD_W21_CS_0;
 	EPD_W21_DC_1;		/* data */
 	mspi_write_byte(data);
-	EPD_W21_CS_1;
 	EPD_W21_DC_1;
 }
