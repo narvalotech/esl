@@ -90,9 +90,7 @@ void epd_init(void)
 #ifndef LUT_OTP
 	value |= BIT(EPD_PSR_REG);
 #endif
-	epd_write_data(value);//bit 3:Gate scan direction  bit 2:Source shift direction;
-	/* What is this? */
-	/* epd_write_data(0x89); */
+	epd_write_data(value);
 
 	epd_write_cmd(EPD_CMD_PWR);
 	epd_write_data(BIT(EPD_PWR_VG_EN) | BIT(EPD_PWR_VS_EN));
