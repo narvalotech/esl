@@ -1,6 +1,7 @@
 #include "epd_main.h"
 #include "epd_lut.h"
 #include "epd_regs.h"
+#include "splash.h"
 #include "utils.h"
 
 void EPD_W21_WriteCMD(unsigned char command);
@@ -43,6 +44,9 @@ int epd_main(void)
 	{
 		epd_reset();
 		epd_init();
+		epd_display_full(drawing);
+		delay_ms(2000);
+
 		epd_display_full(gImage_2);
 		delay_ms(IMG_DELAY_MS);
 
