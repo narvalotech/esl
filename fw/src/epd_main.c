@@ -35,15 +35,17 @@ static uint8_t first_image;
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
 
-#define IMG_DELAY_MS 500
+/* This won't really be 10ms, as the BUSY line is asserted for a couple 100ms */
+#define IMG_DELAY_MS 10
 int epd_main(void)
 {
-	epd_reset();
-	epd_init();
-	epd_display_full(gImage_1);
-	delay_ms(300);
 	while(1)
 	{
+		epd_reset();
+		epd_init();
+		epd_display_full(gImage_2);
+		delay_ms(IMG_DELAY_MS);
+
 		for (int i=0; i<3; i++) {
 			epd_display_partial(gImage_1);
 			delay_ms(IMG_DELAY_MS);
@@ -53,19 +55,7 @@ int epd_main(void)
 			delay_ms(IMG_DELAY_MS);
 		}
 
-		/* Last cycle can only display 2
-		 * TODO: test the limit of partial-refreshes */
-		epd_display_partial(gImage_1);
-		delay_ms(IMG_DELAY_MS);
-		epd_display_full(gImage_2);
-		delay_ms(IMG_DELAY_MS);
-
 		epd_dsleep();
-		delay_ms(300);
-		epd_reset();
-		epd_init();
-
-		epd_display_full(gImage_3);
 		delay_ms(IMG_DELAY_MS);
 	}
 }
