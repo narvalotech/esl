@@ -4,8 +4,8 @@
 #include "splash.h"
 #include "utils.h"
 
-void EPD_W21_WriteCMD(unsigned char command);
-void EPD_W21_WriteDATA(unsigned char data);
+void epd_write_cmd(unsigned char command);
+void epd_write_data(unsigned char data);
 
 #define EPD_WIDTH   128UL
 #define EPD_HEIGHT  250UL
@@ -22,8 +22,8 @@ void EPD_W21_WriteDATA(unsigned char data);
 
 #define isEPD_W21_BUSY  mgpio_read(DISP_BUSY)
 
-static void lut_GC(void);
-static void lut_DU(void);
+static void load_lut_full(void);
+static void load_lut_partial(void);
 void epd_init(void);
 void epd_display_full(const unsigned char* picData);
 void epd_display_partial(const unsigned char* picData);
@@ -80,8 +80,8 @@ void write_cdi(bool boot)
 {
 	uint8_t val = boot ? 0xB7 : 0xD7;
 
-	EPD_W21_WriteCMD(EPD_CMD_CDI);
-	EPD_W21_WriteDATA(val);
+	epd_write_cmd(EPD_CMD_CDI);
+	epd_write_data(val);
 }
 
 void epd_init(void)
@@ -90,7 +90,7 @@ void epd_init(void)
 
 	first_image = 1;
 
-	EPD_W21_WriteCMD(EPD_CMD_PSR);
+	epd_write_cmd(EPD_CMD_PSR);
 	value = BIT(EPD_PSR_RST_N) |
 		BIT(EPD_PSR_SHD_N) |
 		BIT(EPD_PSR_SHL) |
@@ -101,53 +101,53 @@ void epd_init(void)
 #ifndef LUT_OTP
 	value |= BIT(EPD_PSR_REG);
 #endif
-	EPD_W21_WriteDATA(value);//bit 3:Gate scan direction  bit 2:Source shift direction;
+	epd_write_data(value);//bit 3:Gate scan direction  bit 2:Source shift direction;
 	/* What is this? */
-	/* EPD_W21_WriteDATA(0x89); */
+	/* epd_write_data(0x89); */
 
-	EPD_W21_WriteCMD(EPD_CMD_PWR);
-	EPD_W21_WriteDATA(BIT(EPD_PWR_VG_EN) | BIT(EPD_PWR_VS_EN));
-	EPD_W21_WriteDATA(0x00); /* 20V (default) */
-	EPD_W21_WriteDATA(0x3F); /* 15V (default) */
-	EPD_W21_WriteDATA(0x3F); /* 15V (default) */
-	EPD_W21_WriteDATA(0x03); /* 3V (value shouldn't matter) */
+	epd_write_cmd(EPD_CMD_PWR);
+	epd_write_data(BIT(EPD_PWR_VG_EN) | BIT(EPD_PWR_VS_EN));
+	epd_write_data(0x00); /* 20V (default) */
+	epd_write_data(0x3F); /* 15V (default) */
+	epd_write_data(0x3F); /* 15V (default) */
+	epd_write_data(0x03); /* 3V (value shouldn't matter) */
 
-	EPD_W21_WriteCMD(EPD_CMD_BTST);
+	epd_write_cmd(EPD_CMD_BTST);
 	/* phase A & B:
 	 * - 6.58uS off time
 	 * - strength 5
 	 * - 40ms soft-start
 	 */
-	EPD_W21_WriteDATA(0x27);
-	EPD_W21_WriteDATA(0x27);
+	epd_write_data(0x27);
+	epd_write_data(0x27);
 	/* phase C:
 	 * - 6.58us off time
 	 * - strength 6
 	 */
-	EPD_W21_WriteDATA(0x2F);
+	epd_write_data(0x2F);
 
-	EPD_W21_WriteCMD(EPD_CMD_TRES);
-	EPD_W21_WriteDATA(EPD_WIDTH);
-	EPD_W21_WriteDATA(0);
-	EPD_W21_WriteDATA(EPD_HEIGHT);
+	epd_write_cmd(EPD_CMD_TRES);
+	epd_write_data(EPD_WIDTH);
+	epd_write_data(0);
+	epd_write_data(EPD_HEIGHT);
 
-	EPD_W21_WriteCMD(EPD_CMD_GSST);
-	EPD_W21_WriteDATA(0x00);
-	EPD_W21_WriteDATA(0x00);
-	EPD_W21_WriteDATA(0x00);
+	epd_write_cmd(EPD_CMD_GSST);
+	epd_write_data(0x00);
+	epd_write_data(0x00);
+	epd_write_data(0x00);
 
 	write_cdi(true);
 }
 
 void epd_display_full(const unsigned char* picData)
 {
-	EPD_W21_WriteCMD(EPD_CMD_DTM2);
+	epd_write_cmd(EPD_CMD_DTM2);
    	for(unsigned int i=0; i<IMG_BYTES; i++) {
-  		EPD_W21_WriteDATA(*picData);
+  		epd_write_data(*picData);
    		picData++;
    	}
 
-	lut_GC();
+	load_lut_full();
 	epd_refresh();
 
 	if(first_image) {
@@ -163,20 +163,20 @@ void epd_display_partial(const unsigned char* picData)
 		return;
 	}
 
-	EPD_W21_WriteCMD(EPD_CMD_DTM2);
+	epd_write_cmd(EPD_CMD_DTM2);
 	for(unsigned int i=0; i<IMG_BYTES; i++) {
-		EPD_W21_WriteDATA(*picData);
+		epd_write_data(*picData);
 		picData++;
 	}
 
-	lut_DU();
+	load_lut_partial();
 	epd_refresh();
 }
 
 void epd_refresh(void)
 {
-	EPD_W21_WriteCMD(EPD_CMD_AUTO);
-	EPD_W21_WriteDATA(EPD_CMD_ON_REFRESH_OFF);
+	epd_write_cmd(EPD_CMD_AUTO);
+	epd_write_data(EPD_CMD_ON_REFRESH_OFF);
 
 	while(isEPD_W21_BUSY == 0) {
 		/* around 500ms in partial refresh, >1s for full refresh */
@@ -186,8 +186,8 @@ void epd_refresh(void)
 
 void epd_dsleep(void)
 {
-	EPD_W21_WriteCMD (EPD_CMD_DSLP);
-	EPD_W21_WriteDATA(EPD_DSLP_MAGIC);
+	epd_write_cmd (EPD_CMD_DSLP);
+	epd_write_data(EPD_DSLP_MAGIC);
 }
 
 static void write_lut(uint8_t const **p_lut)
@@ -199,54 +199,54 @@ static void write_lut(uint8_t const **p_lut)
 	return;
 #endif
 
-	EPD_W21_WriteCMD(EPD_CMD_LUTC);
-	for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[0][i]);
+	epd_write_cmd(EPD_CMD_LUTC);
+	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[0][i]);
 
-	EPD_W21_WriteCMD(EPD_CMD_LUTWW);
-	for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[1][i]);
+	epd_write_cmd(EPD_CMD_LUTWW);
+	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[1][i]);
 
-	EPD_W21_WriteCMD(EPD_CMD_LUTK);
-	for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[4][i]);
+	epd_write_cmd(EPD_CMD_LUTK);
+	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[4][i]);
 
 	if (!swap || first_image) {
 		swap = true;
 
-		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
-		for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[2][i]);
+		epd_write_cmd(EPD_CMD_LUTKW);
+		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[2][i]);
 
-		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
-		for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[3][i]);
+		epd_write_cmd(EPD_CMD_LUTWK);
+		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[3][i]);
 	} else {
 		swap = false;
 
-		EPD_W21_WriteCMD(EPD_CMD_LUTWK);
-		for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[2][i]);
+		epd_write_cmd(EPD_CMD_LUTWK);
+		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[2][i]);
 
-		EPD_W21_WriteCMD(EPD_CMD_LUTKW);
-		for (uint16_t i = 0; i < LUT_LEN; i++) EPD_W21_WriteDATA(p_lut[3][i]);
+		epd_write_cmd(EPD_CMD_LUTKW);
+		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[3][i]);
 	}
 }
 
-static void lut_GC(void)
+static void load_lut_full(void)
 {
 	uint8_t const *p_lut_gc[5] = {lut_R20_GC, lut_R21_GC, lut_R22_GC, lut_R23_GC, lut_R24_GC};
 	write_lut(p_lut_gc);
 }
 
-static void lut_DU(void)
+static void load_lut_partial(void)
 {
 	uint8_t const *p_lut_du[5] = {lut_R20_DU, lut_R21_DU, lut_R22_DU, lut_R23_DU, lut_R24_DU};
 	write_lut(p_lut_du);
 }
 
-void EPD_W21_WriteCMD(unsigned char command)
+void epd_write_cmd(unsigned char command)
 {
 	EPD_W21_DC_0;		/* command */
 	mspi_write_byte(command);
 	EPD_W21_DC_1;
 }
 
-void EPD_W21_WriteDATA(unsigned char data)
+void epd_write_data(unsigned char data)
 {
 	EPD_W21_DC_1;		/* data */
 	mspi_write_byte(data);
