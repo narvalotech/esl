@@ -3,4 +3,20 @@ description: |
 
 compatible: "epd-spi"
 
-include: [spi-device.yaml]
+include: [spi-device.yaml, display-controller.yaml]
+
+properties:
+  reset-gpios:
+    type: phandle-array
+    required: true
+    description: RESET pin.
+
+  dc-gpios:
+    type: phandle-array
+    required: true
+    description: Data/Command pin.
+
+  busy-gpios:
+    type: phandle-array
+    required: true
+    description: BUSY pin. Active low.

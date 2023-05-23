@@ -94,14 +94,11 @@
 		reg = <0>;
 		spi-max-frequency = <2000000>;
 		compatible = "epd-spi";
-		/* compatible = "solomon,ssd1680", "solomon,ssd16xxfb"; */
-		/* width = <250>; */
-		/* height = <122>; */
-		/* pp-width-bits = <8>; */
-		/* pp-height-bits = <8>; */
-		/* dc-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>; */
-		/* reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>; */
-		/* busy-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>; */
+		width = <250>;
+		height = <128>;
+		dc-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+		reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
+		busy-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
 	};
 };
 
