@@ -4,8 +4,8 @@
 #include "splash.h"
 #include "utils.h"
 
-void epd_write_cmd(unsigned char command);
-void epd_write_data(unsigned char data);
+void epd_write_cmd(uint8_t command);
+void epd_write_data(uint8_t data);
 
 #define EPD_WIDTH   128UL
 #define EPD_HEIGHT  250UL
@@ -14,8 +14,8 @@ void epd_write_data(unsigned char data);
 static void load_lut_full(void);
 static void load_lut_partial(void);
 void epd_init(void);
-void epd_display_full(const unsigned char* picData);
-void epd_display_partial(const unsigned char* picData);
+void epd_display_full(const uint8_t* picData);
+void epd_display_partial(const uint8_t* picData);
 void epd_dsleep(void);
 void epd_refresh(void);
 void epd_reset(void);
@@ -128,10 +128,10 @@ void epd_init(void)
 	write_cdi(true);
 }
 
-void epd_display_full(const unsigned char* picData)
+void epd_display_full(const uint8_t* picData)
 {
 	epd_write_cmd(EPD_CMD_DTM2);
-   	for(unsigned int i=0; i<IMG_BYTES; i++) {
+   	for(int i=0; i<IMG_BYTES; i++) {
   		epd_write_data(*picData);
    		picData++;
    	}
@@ -145,7 +145,7 @@ void epd_display_full(const unsigned char* picData)
 	}
 }
 
-void epd_display_partial(const unsigned char* picData)
+void epd_display_partial(const uint8_t* picData)
 {
 	if(first_image) {
 		/* one full refresh is necessary after boot */
@@ -153,7 +153,7 @@ void epd_display_partial(const unsigned char* picData)
 	}
 
 	epd_write_cmd(EPD_CMD_DTM2);
-	for(unsigned int i=0; i<IMG_BYTES; i++) {
+	for(int i=0; i<IMG_BYTES; i++) {
 		epd_write_data(*picData);
 		picData++;
 	}
@@ -228,14 +228,14 @@ static void load_lut_partial(void)
 	write_lut(p_lut_du);
 }
 
-void epd_write_cmd(unsigned char command)
+void epd_write_cmd(uint8_t command)
 {
 	mgpio_reset(DISP_DC);		/* command */
 	mspi_write_byte(command);
 	mgpio_set(DISP_DC);
 }
 
-void epd_write_data(unsigned char data)
+void epd_write_data(uint8_t data)
 {
 	mgpio_set(DISP_DC);		/* data */
 	mspi_write_byte(data);
