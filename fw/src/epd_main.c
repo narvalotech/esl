@@ -30,7 +30,7 @@ void epd_dsleep(void);
 void epd_refresh(void);
 void epd_reset(void);
 
-static uint8_t first_image = 1;
+static uint8_t first_image;
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
