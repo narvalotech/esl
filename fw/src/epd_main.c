@@ -11,17 +11,6 @@ void epd_write_data(unsigned char data);
 #define EPD_HEIGHT  250UL
 #define IMG_BYTES (EPD_WIDTH * EPD_HEIGHT / 8)
 
-#define EPD_W21_CS_0	mgpio_reset(DISP_CS)
-#define EPD_W21_CS_1	mgpio_set(DISP_CS)
-
-#define EPD_W21_DC_0	mgpio_reset(DISP_DC)
-#define EPD_W21_DC_1	mgpio_set(DISP_DC)
-
-#define EPD_W21_RST_0   mgpio_reset(DISP_RESET)
-#define EPD_W21_RST_1   mgpio_set(DISP_RESET)
-
-#define isEPD_W21_BUSY  mgpio_read(DISP_BUSY)
-
 static void load_lut_full(void);
 static void load_lut_partial(void);
 void epd_init(void);
@@ -66,13 +55,13 @@ int epd_main(void)
 
 void epd_reset(void)
 {
-	EPD_W21_RST_1;
+	mgpio_set(DISP_RESET);
 	delay_ms(10);
 
-	EPD_W21_RST_0;
+	mgpio_reset(DISP_RESET);
 	delay_ms(100);
 
-	EPD_W21_RST_1;
+	mgpio_set(DISP_RESET);
 	delay_ms(100);
 }
 
@@ -178,7 +167,7 @@ void epd_refresh(void)
 	epd_write_cmd(EPD_CMD_AUTO);
 	epd_write_data(EPD_CMD_ON_REFRESH_OFF);
 
-	while(isEPD_W21_BUSY == 0) {
+	while(mgpio_read(DISP_BUSY) == 0) {
 		/* around 500ms in partial refresh, >1s for full refresh */
 		k_msleep(10);
 	}
@@ -241,14 +230,14 @@ static void load_lut_partial(void)
 
 void epd_write_cmd(unsigned char command)
 {
-	EPD_W21_DC_0;		/* command */
+	mgpio_reset(DISP_DC);		/* command */
 	mspi_write_byte(command);
-	EPD_W21_DC_1;
+	mgpio_set(DISP_DC);
 }
 
 void epd_write_data(unsigned char data)
 {
-	EPD_W21_DC_1;		/* data */
+	mgpio_set(DISP_DC);		/* data */
 	mspi_write_byte(data);
-	EPD_W21_DC_1;
+	mgpio_set(DISP_DC);
 }
