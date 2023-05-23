@@ -21,8 +21,8 @@ extern void epd_main(void);
 
 static void init_gpio(void)
 {
-	uint32_t outputs = GP(DISP_MOSI) | GP(DISP_SCK) | GP(DISP_CS) | GP(DISP_DC) | GP(DISP_RESET);
-	uint32_t inputs = GP(DISP_BUSY);
+	uint32_t outputs = BIT(DISP_DC) | BIT(DISP_RESET);
+	uint32_t inputs = BIT(DISP_BUSY);
 
 	NRF_P0->DIRSET = outputs;
 	NRF_P0->DIRCLR = inputs;
@@ -30,39 +30,6 @@ static void init_gpio(void)
 	/* connect input buffer */
 	NRF_P0->PIN_CNF[DISP_BUSY] = 0;
 }
-
-#if 0
-#define INST NRF_SPI0
-
-static void init_spi(void)
-{
-	INST->PSEL.SCK =   DISP_SCK;
-	INST->PSEL.MOSI =  DISP_MOSI;
-	INST->PSEL.MISO =  0x80000000; /* not connected */
-	/* INST->PSEL.CSN =   0x80000000; /\* not connected *\/ */
-
-	INST->FREQUENCY = SPIM_FREQUENCY_FREQUENCY_M2;
-	INST->CONFIG = 0;
-
-	INST->ENABLE = 1UL;
-	/* INST->ENABLE = 7UL; */
-	/* INST->TASKS_STOP = 1; */
-	/* INST->RXD.MAXCNT = 0; */
-}
-
-inline void mspi_write_byte(uint8_t byte)
-{
-	INST->EVENTS_READY = 0;
-	INST->TXD = byte;
-
-	while(INST->EVENTS_READY != 1) {
-		__NOP();
-	}
-	(void)INST->RXD;
-	INST->EVENTS_READY = 0;
-}
-
-#else
 
 #define SPI_OP SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_MODE_CPHA | SPI_WORD_SET(8) | SPI_LINES_SINGLE
 
@@ -90,7 +57,6 @@ void mspi_write_byte(uint8_t byte)
 		k_panic();
 	}
 }
-#endif
 
 int main(void)
 {

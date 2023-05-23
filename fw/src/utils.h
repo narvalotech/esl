@@ -13,21 +13,19 @@
 #define DISP_RESET 15
 #define DISP_BUSY 13
 
-#define GP(x) (1UL << x)
-
 static inline void mgpio_set(uint32_t bit)
 {
-	NRF_P0->OUTSET = GP(bit);
+	NRF_P0->OUTSET = BIT(bit);
 }
 
 static inline void mgpio_reset(uint32_t bit)
 {
-	NRF_P0->OUTCLR = GP(bit);
+	NRF_P0->OUTCLR = BIT(bit);
 }
 
 static inline bool mgpio_read(uint32_t bit)
 {
-	return NRF_P0->IN & GP(bit);
+	return NRF_P0->IN & BIT(bit);
 }
 
 #define delay_us(d) k_busy_wait(d)
@@ -35,27 +33,5 @@ static inline bool mgpio_read(uint32_t bit)
 #define DELAY_S(d) k_sleep(K_SECONDS(d))
 
 void mspi_write_byte(uint8_t byte);
-
-/* #define INST NRF_SPIM3 */
-
-/* static inline void mspi_write_byte(uint8_t byte) */
-/* { */
-/* 	static uint8_t myarray[10] = {0}; */
-
-/* 	myarray[0] = byte; */
-
-/* 	INST->TXD.MAXCNT = 1UL; */
-/* 	INST->TXD.PTR = (uint32_t)myarray; */
-
-/* 	INST->EVENTS_END = 0; */
-/* 	INST->TASKS_START = 1; */
-
-/* 	while(INST->EVENTS_END != 1) { */
-/* 		__NOP(); */
-/* 	} */
-/* 	INST->EVENTS_END = 0; */
-/* } */
-
-#undef INST
 
 #endif // UTILS_H_
