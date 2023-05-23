@@ -155,10 +155,10 @@ void epd_display_full(const unsigned char* picData)
 
 	lut_GC();
 	epd_refresh();
-	write_cdi(false);
 
 	if(first_image) {
 		first_image = 0;
+		write_cdi(false);
 	}
 }
 
@@ -177,7 +177,6 @@ void epd_display_partial(const unsigned char* picData)
 
 	lut_DU();
 	epd_refresh();
-	write_cdi(false);
 }
 
 void epd_refresh(void)
