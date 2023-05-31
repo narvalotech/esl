@@ -16,7 +16,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, 4);
 
-#if 1
+#if 0
 extern void epd_main(void);
 
 static void init_gpio(void)
@@ -68,7 +68,7 @@ int main(void)
 }
 #endif
 
-#if 0
+#if 1
 
 #if !defined(CONFIG_DISPLAY)
 
@@ -120,6 +120,8 @@ int main(void)
 #include <zephyr/display/cfb.h>
 #include <stdio.h>
 
+DEVICE_DECLARE(display_epd);
+
 int main(void)
 {
 	const struct device *dev;
@@ -130,7 +132,7 @@ int main(void)
 
 	/* setup_usb(); */
 
-	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+	dev = DEVICE_GET(display_epd);
 	if (!device_is_ready(dev)) {
 		printf("Device %s not ready\n", dev->name);
 		return 0;

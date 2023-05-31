@@ -3,6 +3,14 @@
 #include "epd_regs.h"
 #include "splash.h"
 #include "utils.h"
+#include <zephyr/device.h>
+#include <zephyr/drivers/display.h>
+#include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/gpio.h>
+#include <nrf.h>
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(epd, CONFIG_DISPLAY_LOG_LEVEL);
 
 void epd_write_cmd(uint8_t command);
 void epd_write_data(uint8_t data);
@@ -21,6 +29,8 @@ void epd_refresh(void);
 void epd_reset(void);
 
 static uint8_t first_image;
+static bool blanking;
+static uint8_t framebuffer[EPD_WIDTH][EPD_HEIGHT];
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
@@ -239,3 +249,186 @@ void epd_write_data(uint8_t data)
 	mspi_write_byte(data);
 	mgpio_set(DISP_DC);
 }
+
+static int epd_read(const struct device *dev, const uint16_t x, const uint16_t y,
+		    const struct display_buffer_descriptor *desc, void *buf)
+{
+	LOG_ERR("not supported");
+	return -ENOTSUP;
+}
+
+static void *epd_get_framebuffer(const struct device *dev)
+{
+	LOG_ERR("not supported");
+	return NULL;
+}
+
+static int epd_set_brightness(const struct device *dev,
+			      const uint8_t brightness)
+{
+	LOG_WRN("not supported");
+	return -ENOTSUP;
+}
+
+static int epd_set_contrast(const struct device *dev, uint8_t contrast)
+{
+	LOG_WRN("not supported");
+	return -ENOTSUP;
+}
+
+static int epd_set_orientation(const struct device *dev,
+			       const enum display_orientation
+			       orientation)
+{
+	LOG_ERR("Unsupported");
+	return -ENOTSUP;
+}
+
+static int epd_set_pixel_format(const struct device *dev,
+				const enum display_pixel_format pf)
+{
+	if (pf == PIXEL_FORMAT_MONO10) {
+		return 0;
+	}
+
+	LOG_ERR("not supported");
+	return -ENOTSUP;
+}
+
+/* EPD seems to use !blanking as `partial refresh` as a convention in zephyr */
+static int epd_blanking_off(const struct device *dev)
+{
+	blanking = false;
+
+	return 0;
+}
+
+static int epd_blanking_on(const struct device *dev)
+{
+	blanking = true;
+
+	return 0;
+}
+
+/* struct display_buffer_descriptor { */
+/* 	/\** Data buffer size in bytes *\/ */
+/* 	uint32_t buf_size; */
+/* 	/\** Data buffer row width in pixels *\/ */
+/* 	uint16_t width; */
+/* 	/\** Data buffer column height in pixels *\/ */
+/* 	uint16_t height; */
+/* 	/\** Number of pixels between consecutive rows in the data buffer *\/ */
+/* 	uint16_t pitch; */
+/* }; */
+
+static int epd_write(const struct device *dev, const uint16_t x, const uint16_t y,
+		     const struct display_buffer_descriptor *desc,
+		     const void *buf)
+{
+	/* x/y: start of buffer, upper left corner */
+	/* TODO: bounds checking */
+	/* uint16_t x_end = x + desc->width - 1; */
+	/* uint16_t y_end = y + desc->height - 1; */
+
+	LOG_DBG("x %u, y %u, height %u, width %u, pitch %u size %u",
+		x, y, desc->height, desc->width, desc->pitch, desc->buf_size);
+
+	__ASSERT(desc->width <= desc->pitch, "Pitch is smaller than width");
+
+	for (int yi = y; yi < desc->height; yi++)
+	for (int xi = x; xi < desc->width; xi++) {
+		framebuffer[xi][yi] = ((uint8_t**)buf)[xi][yi];
+	}
+
+
+	LOG_DBG("start HW write");
+	if (!blanking) {
+		epd_display_partial((uint8_t*)framebuffer);
+	} else {
+		epd_display_full((uint8_t*)framebuffer);
+	}
+	LOG_DBG("end HW write");
+
+	return 0;
+}
+
+static void epd_get_capabilities(const struct device *dev,
+				 struct display_capabilities *caps)
+{
+	memset(caps, 0, sizeof(struct display_capabilities));
+	caps->x_resolution = EPD_WIDTH;
+	caps->y_resolution = EPD_HEIGHT;
+	caps->supported_pixel_formats = PIXEL_FORMAT_MONO10;
+	caps->current_pixel_format = PIXEL_FORMAT_MONO10;
+	caps->screen_info = SCREEN_INFO_MONO_MSB_FIRST | SCREEN_INFO_EPD;
+}
+
+static struct display_driver_api epd_driver_api = {
+	.blanking_on = epd_blanking_on,
+	.blanking_off = epd_blanking_off,
+	.write = epd_write,
+	.read = epd_read,
+	.get_framebuffer = epd_get_framebuffer,
+	.set_brightness = epd_set_brightness,
+	.set_contrast = epd_set_contrast,
+	.get_capabilities = epd_get_capabilities,
+	.set_pixel_format = epd_set_pixel_format,
+	.set_orientation = epd_set_orientation,
+};
+
+static void init_gpio(void)
+{
+	uint32_t outputs = BIT(DISP_DC) | BIT(DISP_RESET);
+	uint32_t inputs = BIT(DISP_BUSY);
+
+	NRF_P0->DIRSET = outputs;
+	NRF_P0->DIRCLR = inputs;
+
+	/* connect input buffer */
+	NRF_P0->PIN_CNF[DISP_BUSY] = 0;
+}
+
+#define SPI_OP SPI_OP_MODE_MASTER | SPI_MODE_CPOL | SPI_MODE_CPHA | SPI_WORD_SET(8) | SPI_LINES_SINGLE
+
+const struct spi_dt_spec spi_dev = SPI_DT_SPEC_GET(DT_NODELABEL(se0213q04), SPI_OP, 0);
+
+static void init_spi(void)
+{
+	if(spi_is_ready_dt(&spi_dev)) {
+		LOG_INF("spi initialized");
+	} else {
+		LOG_ERR("spi not initialized");
+		k_panic();
+	}
+}
+
+void mspi_write_byte(uint8_t byte)
+{
+	uint8_t buf[1] = {byte};
+	const struct spi_buf tx = {.buf = buf, .len = 1};
+	const struct spi_buf_set tx_bufs = {.buffers = &tx, .count = 1};
+
+	int err = spi_transceive_dt(&spi_dev, &tx_bufs, NULL);
+	if (err) {
+		LOG_ERR("SPI transfer failed: %d", err);
+		k_panic();
+	}
+}
+
+static int display_driver_init(const struct device *dev)
+{
+	ARG_UNUSED(dev);
+
+	init_gpio();
+	init_spi();
+
+	epd_reset();
+	epd_init();
+
+	return 0;
+}
+
+DEVICE_DEFINE(display_epd, "EPD", &display_driver_init,
+	      NULL, NULL, NULL,
+	      POST_KERNEL, CONFIG_DISPLAY_INIT_PRIORITY,
+	      &epd_driver_api);
