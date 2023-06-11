@@ -133,19 +133,19 @@ int main(void)
 	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 	/* dev = DEVICE_DT_GET(display_epd); */
 	if (!device_is_ready(dev)) {
-		printf("Device %s not ready\n", dev->name);
+		printk("Device %s not ready\n", dev->name);
 		return 0;
 	}
 
 	if (display_set_pixel_format(dev, PIXEL_FORMAT_MONO10) != 0) {
-		printf("Failed to set required pixel format\n");
+		printk("Failed to set required pixel format\n");
 		return 0;
 	}
 
-	printf("Initialized %s\n", dev->name);
+	printk("Initialized %s\n", dev->name);
 
 	if (cfb_framebuffer_init(dev)) {
-		printf("Framebuffer initialization failed!\n");
+		printk("Framebuffer initialization failed!\n");
 		return 0;
 	}
 
@@ -161,11 +161,11 @@ int main(void)
 			break;
 		}
 		cfb_framebuffer_set_font(dev, idx);
-		printf("font width %d, font height %d\n",
+		printk("font width %d, font height %d\n",
 		       font_width, font_height);
 	}
 
-	printf("x_res %d, y_res %d, ppt %d, rows %d, cols %d\n",
+	printk("x_res %d, y_res %d, ppt %d, rows %d, cols %d\n",
 	       cfb_get_display_parameter(dev, CFB_DISPLAY_WIDTH),
 	       cfb_get_display_parameter(dev, CFB_DISPLAY_HEIGH),
 	       ppt,
@@ -176,9 +176,9 @@ int main(void)
 		for (int i = 0; i < rows; i++) {
 			cfb_framebuffer_clear(dev, false);
 			if (cfb_print(dev,
-				      "0123456789mMgj!\"§$%&/()=",
+				      "hello",
 				      0, i * ppt)) {
-				printf("Failed to print a string\n");
+				printk("Failed to print a string\n");
 				continue;
 			}
 

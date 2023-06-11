@@ -32,7 +32,7 @@ void epd_reset(void);
 
 static uint8_t first_image;
 static bool blanking;
-static uint8_t framebuffer[EPD_WIDTH][EPD_HEIGHT];
+static uint8_t framebuffer[EPD_HEIGHT][EPD_WIDTH];
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
@@ -336,12 +336,18 @@ static int epd_write(const struct device *dev, const uint16_t x, const uint16_t 
 		x, y, desc->height, desc->width, desc->pitch, desc->buf_size);
 
 	__ASSERT(desc->width <= desc->pitch, "Pitch is smaller than width");
+	/* lazy. TODO: support partial updates with framebuffer AND with direct write */
+	__ASSERT_NO_MSG(desc->width == EPD_WIDTH);
+	__ASSERT_NO_MSG(desc->height == EPD_HEIGHT);
 
-	for (int yi = y; yi < desc->height; yi++)
-	for (int xi = x; xi < desc->width; xi++) {
-		framebuffer[xi][yi] = ((uint8_t**)buf)[xi][yi];
+	for (int xi = x; xi < desc->width; xi++)
+	for (int yi = y; yi < desc->height; yi++) {
+		if (yi % 2)
+		framebuffer[yi][xi] = 0xFF;
+		else
+		framebuffer[yi][xi] = 0;
+		epd_display_partial((uint8_t*)framebuffer);
 	}
-
 
 	LOG_DBG("start HW write");
 	if (!blanking) {
@@ -362,7 +368,14 @@ static void epd_get_capabilities(const struct device *dev,
 	caps->y_resolution = EPD_HEIGHT;
 	caps->supported_pixel_formats = PIXEL_FORMAT_MONO10;
 	caps->current_pixel_format = PIXEL_FORMAT_MONO10;
+	/* caps->screen_info = SCREEN_INFO_EPD; */
 	caps->screen_info = SCREEN_INFO_MONO_MSB_FIRST | SCREEN_INFO_EPD;
+	/* CFB module requires SCREEN_INFO_MONO_VTILED to be set to draw text.
+	 * This is actually not the case for us, we are HTILED. This forces us
+	 * to do extra work and change the orientation on the fly at the time of
+	 * write. TODO: fix this upstream.
+	 */
+	caps->screen_info |= SCREEN_INFO_MONO_VTILED;
 }
 
 static struct display_driver_api epd_driver_api = {
@@ -426,6 +439,11 @@ static int display_driver_init(const struct device *dev)
 
 	epd_reset();
 	epd_init();
+
+	/* epd_display_full(drawing); */
+	/* k_msleep(1000); */
+	memset((uint8_t*)framebuffer, 0xFF, sizeof(framebuffer));
+	epd_display_full((uint8_t*)framebuffer);
 
 	return 0;
 }
