@@ -1,3 +1,5 @@
+#define DT_DRV_COMPAT epd_spi
+
 #include "epd_main.h"
 #include "epd_lut.h"
 #include "epd_regs.h"
@@ -428,7 +430,12 @@ static int display_driver_init(const struct device *dev)
 	return 0;
 }
 
-DEVICE_DEFINE(display_epd, "EPD", &display_driver_init,
-	      NULL, NULL, NULL,
-	      POST_KERNEL, CONFIG_DISPLAY_INIT_PRIORITY,
-	      &epd_driver_api);
+/* TODO:
+ * - allow multiple instances
+ * - put device on bus
+ * - use DTS for config/gpio
+ */
+DEVICE_DT_INST_DEFINE(0, &display_driver_init,
+		      NULL, NULL, NULL,
+		      POST_KERNEL, CONFIG_DISPLAY_INIT_PRIORITY,
+		      &epd_driver_api);

@@ -10,7 +10,7 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
-		/* zephyr,display = &se0213q04; */
+		zephyr,display = &se0213q04;
 	};
 
 	/* One discrete RGB LED below the display. */
@@ -90,7 +90,7 @@
 
 	cs-gpios = <&gpio0 20 GPIO_ACTIVE_LOW>;
 
-	se0213q04: ssd16xxfb@0 {
+	se0213q04: epd@0 {
 		reg = <0>;
 		spi-max-frequency = <2000000>;
 		compatible = "epd-spi";

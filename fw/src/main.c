@@ -120,8 +120,6 @@ int main(void)
 #include <zephyr/display/cfb.h>
 #include <stdio.h>
 
-DEVICE_DECLARE(display_epd);
-
 int main(void)
 {
 	const struct device *dev;
@@ -132,7 +130,8 @@ int main(void)
 
 	/* setup_usb(); */
 
-	dev = DEVICE_GET(display_epd);
+	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+	/* dev = DEVICE_DT_GET(display_epd); */
 	if (!device_is_ready(dev)) {
 		printf("Device %s not ready\n", dev->name);
 		return 0;
