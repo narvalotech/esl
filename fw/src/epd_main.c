@@ -32,7 +32,8 @@ void epd_reset(void);
 
 static uint8_t first_image;
 static bool blanking;
-static uint8_t framebuffer[EPD_HEIGHT][EPD_WIDTH];
+/* static uint8_t framebuffer[EPD_HEIGHT][EPD_WIDTH/8]; */
+static uint8_t framebuffer[EPD_HEIGHT * EPD_WIDTH / 8];
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
@@ -312,17 +313,6 @@ static int epd_blanking_on(const struct device *dev)
 	return 0;
 }
 
-/* struct display_buffer_descriptor { */
-/* 	/\** Data buffer size in bytes *\/ */
-/* 	uint32_t buf_size; */
-/* 	/\** Data buffer row width in pixels *\/ */
-/* 	uint16_t width; */
-/* 	/\** Data buffer column height in pixels *\/ */
-/* 	uint16_t height; */
-/* 	/\** Number of pixels between consecutive rows in the data buffer *\/ */
-/* 	uint16_t pitch; */
-/* }; */
-
 static int epd_write(const struct device *dev, const uint16_t x, const uint16_t y,
 		     const struct display_buffer_descriptor *desc,
 		     const void *buf)
@@ -340,14 +330,25 @@ static int epd_write(const struct device *dev, const uint16_t x, const uint16_t 
 	__ASSERT_NO_MSG(desc->width == EPD_WIDTH);
 	__ASSERT_NO_MSG(desc->height == EPD_HEIGHT);
 
-	for (int xi = x; xi < desc->width; xi++)
-	for (int yi = y; yi < desc->height; yi++) {
-		if (yi % 2)
-		framebuffer[yi][xi] = 0xFF;
-		else
-		framebuffer[yi][xi] = 0;
-		epd_display_partial((uint8_t*)framebuffer);
+	int64_t start = k_uptime_get();
+	/* This way we only have to use the OR operation to draw the image */
+	memset(framebuffer, 0, sizeof(framebuffer));
+
+	/* Transform buffer from V-aligned to H-aligned */
+	for (uint32_t xi = 0; xi < 128; xi++) {
+		for (uint32_t yi = 0; yi < 250; yi++) {
+			uint32_t dsti = (xi / 8) + (yi * (128 / 8));
+			uint32_t srci = xi + ((yi/8) * 128);
+
+			if ((((uint8_t*)buf)[srci]) & BIT(7 - (yi & 7UL))) {
+				framebuffer[dsti] |= BIT(7 - (xi & 7UL));
+			}
+		}
 	}
+	int64_t end = k_uptime_get();
+
+	/* LOG_HEXDUMP_WRN(buf, 4000, "buf"); */
+	/* LOG_HEXDUMP_WRN(framebuffer, sizeof(framebuffer), "fb"); */
 
 	LOG_DBG("start HW write");
 	if (!blanking) {
@@ -356,6 +357,7 @@ static int epd_write(const struct device *dev, const uint16_t x, const uint16_t 
 		epd_display_full((uint8_t*)framebuffer);
 	}
 	LOG_DBG("end HW write");
+	LOG_DBG("transform %lldms send %lldms", end-start, k_uptime_get()-end);
 
 	return 0;
 }
