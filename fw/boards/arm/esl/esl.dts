@@ -92,7 +92,7 @@
 
 	se0213q04: epd@0 {
 		reg = <0>;
-		spi-max-frequency = <2000000>;
+		spi-max-frequency = <8000000>;
 		compatible = "epd-spi";
 		width = <250>;
 		height = <128>;

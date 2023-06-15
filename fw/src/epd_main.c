@@ -142,10 +142,7 @@ void epd_init(void)
 void epd_display_full(const uint8_t* picData)
 {
 	epd_write_cmd(EPD_CMD_DTM2);
-   	for(int i=0; i<IMG_BYTES; i++) {
-  		epd_write_data(*picData);
-   		picData++;
-   	}
+	epd_write_data_stream((uint8_t*)picData, IMG_BYTES);
 
 	load_lut_full();
 	epd_refresh();
@@ -163,14 +160,15 @@ void epd_display_partial(const uint8_t* picData)
 		return;
 	}
 
+	int64_t t0 = k_uptime_get();
 	epd_write_cmd(EPD_CMD_DTM2);
-	for(int i=0; i<IMG_BYTES; i++) {
-		epd_write_data(*picData);
-		picData++;
-	}
+	epd_write_data_stream((uint8_t*)picData, IMG_BYTES);
+	int64_t t1 = k_uptime_get();
 
 	load_lut_partial();
+	int64_t t2 = k_uptime_get();
 	epd_refresh();
+	LOG_DBG("data %lldms lut %lldms refresh %lldms", t1-t0, t2-t1, k_uptime_get()-t2);
 }
 
 void epd_refresh(void)
@@ -200,30 +198,30 @@ static void write_lut(uint8_t const **p_lut)
 #endif
 
 	epd_write_cmd(EPD_CMD_LUTC);
-	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[0][i]);
+	epd_write_data_stream(p_lut[0], LUT_LEN);
 
 	epd_write_cmd(EPD_CMD_LUTWW);
-	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[1][i]);
+	epd_write_data_stream(p_lut[1], LUT_LEN);
 
 	epd_write_cmd(EPD_CMD_LUTK);
-	for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[4][i]);
+	epd_write_data_stream(p_lut[4], LUT_LEN);
 
 	if (!swap || first_image) {
 		swap = true;
 
 		epd_write_cmd(EPD_CMD_LUTKW);
-		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[2][i]);
+		epd_write_data_stream(p_lut[2], LUT_LEN);
 
 		epd_write_cmd(EPD_CMD_LUTWK);
-		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[3][i]);
+		epd_write_data_stream(p_lut[3], LUT_LEN);
 	} else {
 		swap = false;
 
 		epd_write_cmd(EPD_CMD_LUTWK);
-		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[2][i]);
+		epd_write_data_stream(p_lut[2], LUT_LEN);
 
 		epd_write_cmd(EPD_CMD_LUTKW);
-		for (uint16_t i = 0; i < LUT_LEN; i++) epd_write_data(p_lut[3][i]);
+		epd_write_data_stream(p_lut[3], LUT_LEN);
 	}
 }
 
@@ -250,6 +248,18 @@ void epd_write_data(uint8_t data)
 {
 	mgpio_set(DISP_DC);		/* data */
 	mspi_write_byte(data);
+	mgpio_set(DISP_DC);
+}
+
+void epd_write_data_stream(const uint8_t *data, size_t len)
+{
+	#define CHUNK 256
+	mgpio_set(DISP_DC);		/* data */
+	for (size_t i=0; i<len; ) {
+		size_t clen = MIN(CHUNK, len-i);
+		mspi_write_buf((uint8_t *)data + i, clen);
+		i+=clen;
+	}
 	mgpio_set(DISP_DC);
 }
 
@@ -423,6 +433,18 @@ void mspi_write_byte(uint8_t byte)
 {
 	uint8_t buf[1] = {byte};
 	const struct spi_buf tx = {.buf = buf, .len = 1};
+	const struct spi_buf_set tx_bufs = {.buffers = &tx, .count = 1};
+
+	int err = spi_transceive_dt(&spi_dev, &tx_bufs, NULL);
+	if (err) {
+		LOG_ERR("SPI transfer failed: %d", err);
+		k_panic();
+	}
+}
+
+void mspi_write_buf(uint8_t *buf, size_t len)
+{
+	const struct spi_buf tx = {.buf = buf, .len = len};
 	const struct spi_buf_set tx_bufs = {.buffers = &tx, .count = 1};
 
 	int err = spi_transceive_dt(&spi_dev, &tx_bufs, NULL);

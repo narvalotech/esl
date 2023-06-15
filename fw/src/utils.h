@@ -33,5 +33,7 @@ static inline bool mgpio_read(uint32_t bit)
 #define DELAY_S(d) k_sleep(K_SECONDS(d))
 
 void mspi_write_byte(uint8_t byte);
+void mspi_write_buf(uint8_t *buf, size_t len);
+void epd_write_data_stream(const uint8_t *data, size_t len);
 
 #endif // UTILS_H_
