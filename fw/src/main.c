@@ -156,7 +156,7 @@ int main(void)
 	rows = cfb_get_display_parameter(dev, CFB_DISPLAY_ROWS);
 	ppt = cfb_get_display_parameter(dev, CFB_DISPLAY_PPT);
 
-	for (int idx = 0; idx < 42; idx++) {
+	for (int idx = 0; idx < 2; idx++) {
 		if (cfb_get_font_size(dev, idx, &font_width, &font_height)) {
 			break;
 		}
@@ -176,7 +176,7 @@ int main(void)
 		for (int i = 0; i < rows; i++) {
 			cfb_framebuffer_clear(dev, false);
 			if (cfb_print(dev,
-				      "hello",
+				      "topkek",
 				      0, i * ppt)) {
 				printk("Failed to print a string\n");
 				continue;
