@@ -156,6 +156,7 @@ void epd_display_full(const uint8_t* picData)
 void epd_display_partial(const uint8_t* picData)
 {
 	if(first_image) {
+		epd_display_full(picData);
 		/* one full refresh is necessary after boot */
 		return;
 	}
@@ -463,11 +464,6 @@ static int display_driver_init(const struct device *dev)
 
 	epd_reset();
 	epd_init();
-
-	/* epd_display_full(drawing); */
-	/* k_msleep(1000); */
-	memset((uint8_t*)framebuffer, 0xFF, sizeof(framebuffer));
-	epd_display_full((uint8_t*)framebuffer);
 
 	return 0;
 }
