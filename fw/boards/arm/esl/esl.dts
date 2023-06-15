@@ -94,8 +94,8 @@
 		reg = <0>;
 		spi-max-frequency = <8000000>;
 		compatible = "epd-spi";
-		width = <250>;
-		height = <128>;
+		width = <128>;
+		height = <250>;
 		dc-gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
 		reset-gpios = <&gpio0 15 GPIO_ACTIVE_LOW>;
 		busy-gpios = <&gpio0 13 GPIO_ACTIVE_HIGH>;
