@@ -77,7 +77,7 @@ int main(void)
 		for (int i = 0; i < rows; i++) {
 			cfb_framebuffer_clear(dev, false);
 			if (cfb_print(dev,
-				      "topkek",
+				      "e-ink go brrr",
 				      0, i * ppt)) {
 				printk("Failed to print a string\n");
 				continue;

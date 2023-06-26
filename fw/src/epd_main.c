@@ -324,6 +324,12 @@ static int epd_blanking_on(const struct device *dev)
 	return 0;
 }
 
+void writeOutPixel(uint8_t *buf, uint32_t x, uint32_t y)
+{
+    uint32_t p = EPD_WIDTH * y + x;
+    buf[p / 8] |= BIT((p & 0x7U));
+}
+
 static int epd_write(const struct device *dev, const uint16_t x, const uint16_t y,
 		     const struct display_buffer_descriptor *desc,
 		     const void *buf)
@@ -336,26 +342,27 @@ static int epd_write(const struct device *dev, const uint16_t x, const uint16_t 
 	LOG_DBG("x %u, y %u, height %u, width %u, pitch %u size %u",
 		x, y, desc->height, desc->width, desc->pitch, desc->buf_size);
 
-	__ASSERT(desc->width <= desc->pitch, "Pitch is smaller than width");
+	__ASSERT(desc->height <= desc->pitch, "Pitch is smaller than width");
 	/* lazy. TODO: support partial updates with framebuffer AND with direct write */
-	__ASSERT_NO_MSG(desc->width == EPD_WIDTH);
-	__ASSERT_NO_MSG(desc->height == EPD_HEIGHT);
+	__ASSERT_NO_MSG(desc->width == EPD_HEIGHT);
+	__ASSERT_NO_MSG(desc->height == EPD_WIDTH);
 
 	int64_t start = k_uptime_get();
 	/* This way we only have to use the OR operation to draw the image */
 	memset(framebuffer, 0, sizeof(framebuffer));
 
-	/* Transform buffer from V-aligned to H-aligned */
-	for (uint32_t xi = 0; xi < 128; xi++) {
-		for (uint32_t yi = 0; yi < 250; yi++) {
-			uint32_t dsti = (xi / 8) + (yi * (128 / 8));
-			uint32_t srci = xi + ((yi/8) * 128);
+	uint8_t const *input = buf;
 
-			if ((((uint8_t*)buf)[srci]) & BIT(7 - (yi & 7UL))) {
-				framebuffer[dsti] |= BIT(7 - (xi & 7UL));
-			}
+	/* Transform buffer from landscape V-aligned to portrait H-aligned */
+	for (int y=0; y<desc->height; y++) {
+		for (int x=0; x<desc->width; x++) {
+			uint32_t dy = x;
+			uint32_t dx = (desc->height-1) - y;
+			if (input[(desc->width) * (y / 8) + x] & BIT((y & 0x7)))
+				writeOutPixel(framebuffer, dx, dy);
 		}
 	}
+
 	int64_t end = k_uptime_get();
 
 	/* LOG_HEXDUMP_WRN(buf, 4000, "buf"); */
@@ -377,8 +384,8 @@ static void epd_get_capabilities(const struct device *dev,
 				 struct display_capabilities *caps)
 {
 	memset(caps, 0, sizeof(struct display_capabilities));
-	caps->x_resolution = EPD_WIDTH;
-	caps->y_resolution = EPD_HEIGHT;
+	caps->x_resolution = EPD_HEIGHT;
+	caps->y_resolution = EPD_WIDTH;
 	caps->supported_pixel_formats = PIXEL_FORMAT_MONO10;
 	caps->current_pixel_format = PIXEL_FORMAT_MONO10;
 	/* caps->screen_info = SCREEN_INFO_EPD; */
