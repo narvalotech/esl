@@ -64,6 +64,7 @@ int main(void)
 		cfb_framebuffer_set_font(dev, idx);
 		printk("font width %d, font height %d\n",
 		       font_width, font_height);
+		break;
 	}
 
 	printk("x_res %d, y_res %d, ppt %d, rows %d, cols %d\n",
