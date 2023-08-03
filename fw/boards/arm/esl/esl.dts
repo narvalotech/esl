@@ -83,6 +83,8 @@
 
 &spi0 {
 	status = "okay";
+	/* SPIM broken in upstream. tested ~3mo ago and it works */
+	compatible = "nordic,nrf-spi";
 
 	pinctrl-0 = <&spi0_default>;
 	pinctrl-1 = <&spi0_sleep>;
