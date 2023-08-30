@@ -1,0 +1,7 @@
+description: |
+    Fake UART output on e-ink display
+
+compatible: "nvl,epd-uart"
+
+include: [uart-controller.yaml]
+

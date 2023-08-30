@@ -106,17 +106,23 @@ static void scroll_up(void)
 	memset(cbuf[MAXLINE-1], ' ', MAXCOL);
 }
 
-static int esl_cfb_out(int c)
+int esl_cfb_out(int c)
 {
 	static uint32_t col = 0;
 	static uint32_t line = 0;
 
-	if ((c != '\n') && (c != '\r')) {
-		cbuf[line][col] = c;
-		col++;
-	} else {
-		line++;
-		col = 0;
+	/* TODO: handle ANSI esc codes */
+	switch (c) {
+		case '\n':
+			line++;
+			col = 0;
+			break;
+		case '\r':
+			/* eat the char */
+			break;
+		default:
+			cbuf[line][col] = c;
+			col++;
 	}
 
 	if (col >= MAXCOL-1) {
@@ -132,16 +138,21 @@ static int esl_cfb_out(int c)
 	return c;
 }
 
+void esl_cfb_init(void)
+{
+	memset(cbuf, ' ', sizeof(cbuf) - 1);
+
+	/* first line is half cut off */
+	esl_cfb_out('\n');
+}
+
 #if defined(CONFIG_CONSOLE_EPD) && defined(CONFIG_PRINTK)
 extern void __printk_hook_install(int (*fn)(int c));
 extern void __stdout_hook_install(int (*fn)(int c));
 
 static int cfb_console_init(void)
 {
-	memset(cbuf, ' ', sizeof(cbuf) - 1);
-
-	/* first line is half cut off */
-	esl_cfb_out('\n');
+	esl_cfb_init();
 
 #if defined(CONFIG_STDOUT_CONSOLE)
 	__stdout_hook_install(esl_cfb_out);

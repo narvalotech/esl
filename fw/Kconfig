@@ -1,6 +1,12 @@
-
 config CONSOLE_EPD
 	bool "Console on (EINK) display"
 	select CONSOLE_HAS_DRIVER
+
+config UART_EPD
+	bool "UART out on (EINK) display"
+	default y if SERIAL
+	select SERIAL_HAS_DRIVER
+	depends on DT_HAS_NVL_EPD_UART_ENABLED
+	depends on !CONSOLE_EPD
 
 source "Kconfig.zephyr"
