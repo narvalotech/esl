@@ -5,6 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
+#include <zephyr/init.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
@@ -20,6 +21,15 @@ LOG_MODULE_REGISTER(main, 4);
 #include <zephyr/device.h>
 #include <zephyr/display/cfb.h>
 #include <stdio.h>
+
+/* calibrated for creep.ttf */
+#define FWIDTH 5
+#define FHEIGHT 12
+#define MAXLINE (128 / 12)
+#define MAXCOL (250 / 5)
+
+/* This could be k_malloc'd to be dynamic */
+static char cbuf[MAXLINE][MAXCOL + 1] = {0};
 
 int main(void)
 {
@@ -74,19 +84,72 @@ int main(void)
 	       rows,
 	       cfb_get_display_parameter(dev, CFB_DISPLAY_COLS));
 
-	while (1) {
-		for (int i = 0; i < rows; i++) {
-			cfb_framebuffer_clear(dev, false);
-			if (cfb_print(dev,
-				      "e-ink go brrr",
-				      0, i * ppt)) {
-				printk("Failed to print a string\n");
-				continue;
-			}
+	printk("hello from main thread\n");
 
-			cfb_framebuffer_finalize(dev);
-			/* k_sleep(K_MSEC(100)); */
+	while (1) {
+		cfb_framebuffer_clear(dev, false);
+		cbuf[MAXLINE-1][MAXCOL] = '\0';
+		for (int line = 0; line < MAXLINE; line++) {
+			cfb_draw_text(dev, cbuf[line], 0, line * FHEIGHT);
 		}
+		cfb_framebuffer_finalize(dev);
 	}
+
 	return 0;
 }
+
+static void scroll_up(void)
+{
+	for (int line = 0; line < (MAXLINE-1); line++) {
+		memcpy(cbuf[line], cbuf[line + 1], MAXCOL);
+	}
+	memset(cbuf[MAXLINE-1], ' ', MAXCOL);
+}
+
+static int esl_cfb_out(int c)
+{
+	static uint32_t col = 0;
+	static uint32_t line = 0;
+
+	if ((c != '\n') && (c != '\r')) {
+		cbuf[line][col] = c;
+		col++;
+	} else {
+		line++;
+		col = 0;
+	}
+
+	if (col >= MAXCOL-1) {
+		line++;
+		col = 0;
+	}
+
+	if (line >= MAXLINE && col == 0) {
+		line = MAXLINE-1;
+		scroll_up();
+	}
+
+	return c;
+}
+
+#if defined(CONFIG_CONSOLE_EPD) && defined(CONFIG_PRINTK)
+extern void __printk_hook_install(int (*fn)(int c));
+extern void __stdout_hook_install(int (*fn)(int c));
+
+static int cfb_console_init(void)
+{
+	memset(cbuf, ' ', sizeof(cbuf) - 1);
+
+	/* first line is half cut off */
+	esl_cfb_out('\n');
+
+#if defined(CONFIG_STDOUT_CONSOLE)
+	__stdout_hook_install(esl_cfb_out);
+#endif
+	__printk_hook_install(esl_cfb_out);
+	return 0;
+}
+
+SYS_INIT(cfb_console_init, POST_KERNEL, CONFIG_CONSOLE_INIT_PRIORITY);
+
+#endif

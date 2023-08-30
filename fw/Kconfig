@@ -1,0 +1,6 @@
+
+config CONSOLE_EPD
+	bool "Console on (EINK) display"
+	select CONSOLE_HAS_DRIVER
+
+source "Kconfig.zephyr"
