@@ -24,12 +24,27 @@ LOG_MODULE_REGISTER(main, 4);
 
 /* calibrated for creep.ttf */
 #define FWIDTH 5
-#define FHEIGHT 12
-#define MAXLINE (128 / 12)
-#define MAXCOL (250 / 5)
+#define FHEIGHT 12		/* kde says 11 */
+#define MAXLINE (128 / 12)	/* 10 */
+#define MAXCOL (250 / 5)	/* 50 */
 
 /* This could be k_malloc'd to be dynamic */
 static char cbuf[MAXLINE][MAXCOL + 1] = {0};
+
+void setup_usb(void)
+{
+	const struct device *dev = DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart);
+	if (!device_is_ready(dev)) {
+		LOG_ERR("CDC ACM device not ready");
+		return;
+	}
+
+	int ret = usb_enable(NULL);
+	if (ret != 0) {
+		LOG_ERR("Failed to enable USB: %d", ret);
+		return;
+	}
+}
 
 int main(void)
 {
@@ -39,7 +54,7 @@ int main(void)
 	uint8_t font_width;
 	uint8_t font_height;
 
-	/* setup_usb(); */
+	setup_usb();
 
 	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
 	/* dev = DEVICE_DT_GET(display_epd); */
@@ -106,23 +121,77 @@ static void scroll_up(void)
 	memset(cbuf[MAXLINE-1], ' ', MAXCOL);
 }
 
+bool is_number(int c)
+{
+	return (c >= '0') && (c <= '9');
+}
+
+bool is_letter(int c)
+{
+	return ((c >= 'A') && (c <= 'Z')) ||
+		((c >= 'a') && (c <= 'z'));
+}
+
+int esl_cfb_out(int c);
+static bool vt100 = false;
+void handle_vt100(int c)
+{
+	static int vt_r0 = 0;
+
+	if (c == '[') {
+		/* start of sequence.
+		 * todo: assert first char after ESC */
+		return;
+	}
+
+	if (is_number(c)) {
+		vt_r0 *= 10;
+		vt_r0 += c - '0';
+		return;
+	}
+
+	/* todo: switch */
+	if (is_letter(c)) {
+		if (c == 'C') {
+			/* advance cursor position */
+			vt100 = false;
+			printk("VT:advance-%d\n", vt_r0);
+			for (int i=0; i<vt_r0; i++) esl_cfb_out(' ');
+		}
+		/* eat the char */
+	}
+
+	vt100 = false;
+	vt_r0 = 0;
+}
+
 int esl_cfb_out(int c)
 {
 	static uint32_t col = 0;
 	static uint32_t line = 0;
 
-	/* TODO: handle ANSI esc codes */
+	printk("%02x(%c) ", c, c);
+	/* printk("%c", c); */
 	switch (c) {
+		case '\e':
+			vt100 = true;
+			printk("`vt`");
+			break;
 		case '\n':
 			line++;
 			col = 0;
-			break;
+			printk("\n");
 		case '\r':
-			/* eat the char */
+			col = 0;
 			break;
 		default:
-			cbuf[line][col] = c;
-			col++;
+			if (vt100) {
+				handle_vt100(c);
+				return c;
+			} else {
+				cbuf[line][col] = c;
+				col++;
+			}
 	}
 
 	if (col >= MAXCOL-1) {
@@ -133,6 +202,7 @@ int esl_cfb_out(int c)
 	if (line >= MAXLINE && col == 0) {
 		line = MAXLINE-1;
 		scroll_up();
+		printk("\n###\n");
 	}
 
 	return c;

@@ -15,10 +15,10 @@ static int uart_epd_init(const struct device *dev)
 
 static int uart_epd_poll_in(const struct device *dev, unsigned char *c)
 {
-	unsigned int ret = 0;	/* TODO: read from real UART */
+	/* Use USB UART as input device for now */
+	const struct device *const usb = DEVICE_DT_GET(DT_NODELABEL(cdc_acm_uart0));
 
-	/* -1 if buf empty */
-	return ret ? 0 : -1;
+	return uart_poll_in(usb, c);
 }
 
 extern int esl_cfb_out(int c);
