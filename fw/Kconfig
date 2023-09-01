@@ -9,4 +9,10 @@ config UART_EPD
 	depends on DT_HAS_NVL_EPD_UART_ENABLED
 	depends on !CONSOLE_EPD
 
+config UC8251D
+	bool "UC8251D display driver"
+	default y if DISPLAY
+	select DISPLAY_HAS_DRIVER
+	depends on DT_HAS_NVL_EPD_SPI_ENABLED
+
 source "Kconfig.zephyr"

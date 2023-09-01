@@ -1,4 +1,4 @@
-#define DT_DRV_COMPAT epd_spi
+#define DT_DRV_COMPAT nvl_epd_spi
 
 #include "epd_main.h"
 #include "epd_lut.h"
@@ -37,34 +37,6 @@ static uint8_t framebuffer[EPD_HEIGHT * EPD_WIDTH / 8];
 
 /* using on-board LUTs doesn't work */
 /* #define LUT_OTP */
-
-/* This won't really be 10ms, as the BUSY line is asserted for a couple 100ms */
-#define IMG_DELAY_MS 10
-int epd_main(void)
-{
-	while(1)
-	{
-		epd_reset();
-		epd_init();
-		epd_display_full(drawing);
-		delay_ms(2000);
-
-		epd_display_full(gImage_2);
-		delay_ms(IMG_DELAY_MS);
-
-		for (int i=0; i<3; i++) {
-			epd_display_partial(gImage_1);
-			delay_ms(IMG_DELAY_MS);
-			epd_display_partial(gImage_2);
-			delay_ms(IMG_DELAY_MS);
-			epd_display_partial(gImage_3);
-			delay_ms(IMG_DELAY_MS);
-		}
-
-		epd_dsleep();
-		delay_ms(IMG_DELAY_MS);
-	}
-}
 
 void epd_reset(void)
 {

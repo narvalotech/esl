@@ -1,7 +1,7 @@
 description: |
     Temporary SPI epaper bindings
 
-compatible: "epd-spi"
+compatible: "nvl,epd-spi"
 
 include: [spi-device.yaml, display-controller.yaml]
 

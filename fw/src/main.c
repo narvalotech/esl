@@ -9,10 +9,6 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
-#include <zephyr/drivers/uart.h>
-#include <zephyr/drivers/spi.h>
-#include <nrf.h>
-#include "utils.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(main, 4);
