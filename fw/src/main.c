@@ -29,6 +29,7 @@ static char cbuf[MAXLINE][MAXCOL + 1] = {0};
 
 void setup_usb(void)
 {
+#if CONFIG_USB_DEVICE_STACK
 	const struct device *dev = DEVICE_DT_GET_ONE(zephyr_cdc_acm_uart);
 	if (!device_is_ready(dev)) {
 		LOG_ERR("CDC ACM device not ready");
@@ -40,6 +41,7 @@ void setup_usb(void)
 		LOG_ERR("Failed to enable USB: %d", ret);
 		return;
 	}
+#endif
 }
 
 int main(void)
@@ -104,6 +106,11 @@ int main(void)
 			cfb_draw_text(dev, cbuf[line], 0, line * FHEIGHT);
 		}
 		cfb_framebuffer_finalize(dev);
+
+		if (IS_ENABLED(CONFIG_NATIVE_APPLICATION)) {
+			/* relinquish CPU for drawing the UI */
+			k_msleep(100);
+		}
 	}
 
 	return 0;

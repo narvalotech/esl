@@ -1,0 +1,19 @@
+
+/ {
+	chosen {
+		zephyr,console = &uart0;
+		zephyr,shell-uart = &fakeuart;
+		zephyr,display = &sdl_dc;
+	};
+
+	fakeuart: fake {
+		compatible = "nvl,epd-uart";
+		status = "okay";
+	};
+};
+
+&sdl_dc {
+	compatible = "zephyr,sdl-dc";
+	width = <250>;
+	height = <128>;
+};

@@ -13,6 +13,7 @@ config UC8251D
 	bool "UC8251D display driver"
 	default y if DISPLAY
 	select DISPLAY_HAS_DRIVER
+	select SPI
 	depends on DT_HAS_NVL_EPD_SPI_ENABLED
 
 source "Kconfig.zephyr"
