@@ -1,14 +1,13 @@
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/uart.h>
+#include "framebuffer.h"
 
 #define DT_DRV_COMPAT nvl_epd_uart
 
-extern void esl_cfb_init(void);
-
 static int uart_epd_init(const struct device *dev)
 {
-	/* TODO: we might want to init the whole EPD driver here */
-	esl_cfb_init();
+	/* TODO: we might want to init the framebuffer + the display driver here */
+	framebuffer_reset();
 
 	return 0;
 }
@@ -24,7 +23,7 @@ static int uart_epd_poll_in(const struct device *dev, unsigned char *c)
 extern int esl_cfb_out(int c);
 static void uart_epd_poll_out(const struct device *dev, unsigned char c)
 {
-	esl_cfb_out(c);
+	framebuffer_write_char(c);
 }
 
 static const struct uart_driver_api uart_epd_driver_api = {

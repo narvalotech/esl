@@ -15,6 +15,7 @@ target_include_directories(app PRIVATE ${CMAKE_BINARY_DIR}/app/include src)
 
 target_sources(app PRIVATE
   src/creep.c
+  src/framebuffer.c
   src/main.c)
 
 target_sources_ifdef(CONFIG_UART_EPD app PRIVATE src/epd_serial.c)
