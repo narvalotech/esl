@@ -5,7 +5,6 @@
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/init.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
@@ -245,22 +244,3 @@ void esl_cfb_init(void)
 	/* first line is half cut off */
 	esl_cfb_out('\n');
 }
-
-#if defined(CONFIG_CONSOLE_EPD) && defined(CONFIG_PRINTK)
-extern void __printk_hook_install(int (*fn)(int c));
-extern void __stdout_hook_install(int (*fn)(int c));
-
-static int cfb_console_init(void)
-{
-	esl_cfb_init();
-
-#if defined(CONFIG_STDOUT_CONSOLE)
-	__stdout_hook_install(esl_cfb_out);
-#endif
-	__printk_hook_install(esl_cfb_out);
-	return 0;
-}
-
-SYS_INIT(cfb_console_init, POST_KERNEL, CONFIG_CONSOLE_INIT_PRIORITY);
-
-#endif
