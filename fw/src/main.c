@@ -44,33 +44,28 @@ void setup_usb(void)
 #endif
 }
 
-int main(void)
+int framebuffer_setup(const struct device *dev)
 {
-	const struct device *dev;
 	uint16_t rows;
 	uint8_t ppt;
 	uint8_t font_width;
 	uint8_t font_height;
 
-	setup_usb();
-
-	dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
-	/* dev = DEVICE_DT_GET(display_epd); */
 	if (!device_is_ready(dev)) {
 		printk("Device %s not ready\n", dev->name);
-		return 0;
+		return -ENODEV;
 	}
 
 	if (display_set_pixel_format(dev, PIXEL_FORMAT_MONO10) != 0) {
 		printk("Failed to set required pixel format\n");
-		return 0;
+		return -EINVAL;
 	}
 
 	printk("Initialized %s\n", dev->name);
 
 	if (cfb_framebuffer_init(dev)) {
 		printk("Framebuffer initialization failed!\n");
-		return 0;
+		return -EIO;
 	}
 
 	cfb_framebuffer_clear(dev, true);
@@ -97,20 +92,52 @@ int main(void)
 	       rows,
 	       cfb_get_display_parameter(dev, CFB_DISPLAY_COLS));
 
-	printk("hello from main thread\n");
+	printk("setup ok\n");
 
+	return 0;
+}
+
+void framebuffer_update(const struct device *dev)
+{
+	cfb_framebuffer_clear(dev, false);
+
+	/* cfb takes a string as input */
+	cbuf[MAXLINE-1][MAXCOL] = '\0';
+
+	/* draw each line */
+	for (int line = 0; line < MAXLINE; line++) {
+		cfb_draw_text(dev, cbuf[line], 0, line * FHEIGHT);
+	}
+
+	/* write rendered framebuffer to display */
+	cfb_framebuffer_finalize(dev);
+
+	if (IS_ENABLED(CONFIG_NATIVE_APPLICATION)) {
+		/* The real display takes ~600ms to update. The SDL-based
+		 * emulated display on native builds will take 0 (zephyr)
+		 * time.
+		 *
+		 * We need to sleep a bit to allow the native platform and
+		 * display to do its bookkeeping.
+		 */
+		k_msleep(100);
+	}
+}
+
+int main(void)
+{
+	setup_usb();
+
+	const struct device *dev =
+		DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+
+	framebuffer_setup(dev);
+
+	printk("entering main loop\n");
+
+	/* framebuffer rendering loop */
 	while (1) {
-		cfb_framebuffer_clear(dev, false);
-		cbuf[MAXLINE-1][MAXCOL] = '\0';
-		for (int line = 0; line < MAXLINE; line++) {
-			cfb_draw_text(dev, cbuf[line], 0, line * FHEIGHT);
-		}
-		cfb_framebuffer_finalize(dev);
-
-		if (IS_ENABLED(CONFIG_NATIVE_APPLICATION)) {
-			/* relinquish CPU for drawing the UI */
-			k_msleep(100);
-		}
+		framebuffer_update(dev);
 	}
 
 	return 0;
