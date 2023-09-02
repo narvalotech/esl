@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2016 Intel Corporation.
- *
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
