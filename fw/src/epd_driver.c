@@ -67,8 +67,9 @@ void epd_init(void)
 	epd_write_cmd(EPD_CMD_PSR);
 	value = BIT(EPD_PSR_RST_N) |
 		BIT(EPD_PSR_SHD_N) |
-		BIT(EPD_PSR_SHL) |
-		BIT(EPD_PSR_UD) |
+		/* uncomment to rotate 180deg */
+		/* BIT(EPD_PSR_SHL) | */
+		/* BIT(EPD_PSR_UD) | */
 		BIT(EPD_PSR_KWR) |
 		BIT(EPD_PSR_RES0) |
 		BIT(EPD_PSR_RES1) ;
