@@ -2,6 +2,7 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
+#include <zephyr/input/input.h>
 
 #include "framebuffer.h"
 
@@ -24,6 +25,16 @@ void setup_usb(void)
 	}
 #endif
 }
+
+static void input_cb(struct input_event *evt)
+{
+	/* Don't do anything for now */
+	printk("sync %u type %u code 0x%x value %d\n",
+	       evt->sync, evt->type, evt->code, evt->value);
+}
+
+/* Invoke callback for all input devices */
+INPUT_CALLBACK_DEFINE(NULL, input_cb);
 
 int main(void)
 {
