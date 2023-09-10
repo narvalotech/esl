@@ -3,6 +3,7 @@
 #include <zephyr/usb/usb_device.h>
 #include <zephyr/usb/usbd.h>
 #include <zephyr/input/input.h>
+#include <zephyr/drivers/led.h>
 
 #include "framebuffer.h"
 
@@ -36,8 +37,45 @@ static void input_cb(struct input_event *evt)
 /* Invoke callback for all input devices */
 INPUT_CALLBACK_DEFINE(NULL, input_cb);
 
+void led_test(void)
+{
+#define LEDS_NODE_ID DT_COMPAT_GET_ANY_STATUS_OKAY(gpio_leds)
+
+	if (IS_ENABLED(CONFIG_NATIVE_APPLICATION)) {
+		return;
+	}
+
+	const char *led_label[] = {
+	DT_FOREACH_CHILD_SEP_VARGS(LEDS_NODE_ID, DT_PROP_OR, (,), label, NULL)};
+
+	const int num_leds = ARRAY_SIZE(led_label);
+
+	const struct device *leds;
+
+	leds = DEVICE_DT_GET(LEDS_NODE_ID);
+	if (!device_is_ready(leds)) {
+		LOG_ERR("Device %s is not ready", leds->name);
+		return;
+	}
+
+	if (!num_leds) {
+		LOG_ERR("No LEDs found for %s", leds->name);
+		return;
+	}
+
+	/* Turn on all LEDs */
+	for (uint8_t led = 0; led < num_leds; led++) {
+		LOG_INF("turn on LED %d", led);
+		led_on(leds, led);
+		k_msleep(300);
+		led_off(leds, led);
+	}
+}
+
 int main(void)
 {
+	led_test();
+
 	setup_usb();
 
 	const struct device *dev =
