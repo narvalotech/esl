@@ -72,8 +72,14 @@ void led_test(void)
 	}
 }
 
+extern int flashtest(void);
+
 int main(void)
 {
+	if (IS_ENABLED(CONFIG_SPI_NOR)) {
+		flashtest();
+	}
+
 	led_test();
 
 	setup_usb();
