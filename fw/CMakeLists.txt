@@ -21,3 +21,4 @@ target_sources(app PRIVATE
 target_sources_ifdef(CONFIG_UART_EPD app PRIVATE src/epd_serial.c)
 target_sources_ifdef(CONFIG_UC8251D  app PRIVATE src/epd_driver.c)
 target_sources_ifdef(CONFIG_SPI_NOR  app PRIVATE src/flash.c)
+target_sources_ifdef(CONFIG_ADC      app PRIVATE src/adc.c)

@@ -73,9 +73,24 @@ void led_test(void)
 }
 
 extern int flashtest(void);
+extern int testbatt(void);
+
+static void init_gpio(void)
+{
+#if !defined(CONFIG_NATIVE_APPLICATION)
+	/* TODO: use DTS */
+	NRF_P0->DIRSET = BIT(31);
+	NRF_P0->OUTSET = BIT(31);
+#endif
+}
 
 int main(void)
 {
+	if (IS_ENABLED(CONFIG_ADC)) {
+		init_gpio();
+		testbatt();
+	}
+
 	if (IS_ENABLED(CONFIG_SPI_NOR)) {
 		flashtest();
 	}
