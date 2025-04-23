@@ -54,8 +54,8 @@ CONFIG_UART_LINE_CTRL=y
 
 # -----------------------------------------
 # flash
-CONFIG_FLASH=y
-CONFIG_SPI_NOR=y
+# CONFIG_FLASH=y
+# CONFIG_SPI_NOR=y
 # CONFIG_SPI_NOR_SFDP_RUNTIME=y
 # CONFIG_SPI_NOR_IDLE_IN_DPD=y
 
