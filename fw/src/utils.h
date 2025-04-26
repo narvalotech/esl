@@ -6,12 +6,9 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#define DISP_MOSI 24
-#define DISP_SCK 22
-#define DISP_CS 20
-#define DISP_DC 17
-#define DISP_RESET 15
-#define DISP_BUSY 13
+#define DISP_DC 28
+#define DISP_RESET 3
+#define DISP_BUSY 2
 
 static inline void mgpio_set(uint32_t bit)
 {

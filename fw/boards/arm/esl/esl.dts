@@ -7,7 +7,7 @@
 	compatible = "nordic,esl";
 
 	zephyr,user {
-		io-channels = <&adc 0>;
+		io-channels = <&adc 7>;
 	};
 
 	chosen {
@@ -22,6 +22,7 @@
 
 	leds {
 		compatible = "gpio-leds";
+		status = "okay";
 		led0: led_0 {
 			gpios = <&gpio0 26 GPIO_ACTIVE_LOW>;
 			label = "Red LED";
@@ -124,6 +125,7 @@
 		compatible = "nvl,epd-spi";
 		width = <250>;
 		height = <128>;
+        // FIXME: those are hardcoded in utils.h rn
 		dc-gpios = <&gpio0 28 GPIO_ACTIVE_LOW>;
 		reset-gpios = <&gpio0 3 GPIO_ACTIVE_LOW>;
 		busy-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
