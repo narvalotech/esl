@@ -2,6 +2,9 @@
     "name": "ESL 🖥️",
     "image": "nvl-esl:latest",
 
+    "privileged": true,
+    "network_mode": "host",
+
     "containerEnv": {
         "HISTCONTROL": "ignoredups:erasedups",
         "ZEPHYR_BASE": "/workspaces/zephyr",
@@ -31,6 +34,7 @@
     "updateContentCommand": "/workspaces/esl/.devcontainer/scripts/setup-env.sh",
 
     "mounts": [
-        "source=${localWorkspaceFolder}/.cache/.bash_history,target=/home/user/.bash_history,type=bind,consistency=cached"
+        "source=${localWorkspaceFolder}/.cache/.bash_history,target=/home/user/.bash_history,type=bind,consistency=cached",
+        "type=bind,source=/dev/bus/usb,target=/dev/bus/usb"
     ]
 }
